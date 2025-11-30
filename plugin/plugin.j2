@@ -1,0 +1,64 @@
+<?xml version='1.0' standalone='yes'?>
+<!DOCTYPE PLUGIN>
+
+<PLUGIN 
+  name="{{ name }}"
+  author="{{ author }}"
+  version="{{ env['PLUGIN_VERSION'] }}"
+  {% if launch is defined %}launch="{{ launch }}"{% endif %}
+  pluginURL="https://raw.githubusercontent.com/{{ env['GITHUB_REPOSITORY'] }}/main/plugin/{{ name }}.plg"
+  {% if support is defined %}support="{{ support }}"{% endif %}
+  {% if min is defined %}min="{{ min }}"{% endif %}
+  {% if max is defined %}max="{{ max }}"{% endif %}
+  {% if icon is defined %}icon="{{ icon }}"{% endif %}
+>
+
+<CHANGES>
+<![CDATA[
+{{ env['PLUGIN_CHANGELOG'] }}
+
+For older releases, see https://github.com/{{ env['GITHUB_REPOSITORY'] }}/releases
+]]>
+</CHANGES>
+
+<FILE Name="/boot/config/plugins/{{ name }}/{{ package_name }}-{{ env['PLUGIN_VERSION'] }}-noarch-1.txz">
+<URL>https://github.com/{{ env['GITHUB_REPOSITORY'] }}/releases/download/{{ env['PLUGIN_VERSION'] }}/{{ package_name }}-{{ env['PLUGIN_VERSION'] }}-noarch-1.txz</URL>
+<SHA256>{{ env['PLUGIN_CHECKSUM'] }}</SHA256>
+</FILE>
+
+<!--
+The 'install' script.
+-->
+<FILE Run="/bin/bash">
+<INLINE>
+<![CDATA[
+upgradepkg --install-new /boot/config/plugins/{{ name }}/{{ package_name }}-{{ env['PLUGIN_VERSION'] }}-noarch-1.txz
+
+# cleanup old versions
+rm -f $(ls /boot/config/plugins/{{ name }}/{{ package_name }}-*.txz 2>/dev/null | grep -v '{{ env['PLUGIN_VERSION'] }}')
+
+echo ""
+echo "----------------------------------------------------"
+echo " {{ name }} has been installed."
+echo " Version: {{ env['PLUGIN_VERSION'] }}"
+echo "----------------------------------------------------"
+echo ""
+]]>
+</INLINE>
+</FILE>
+
+<!--
+The 'remove' script.
+-->
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+<![CDATA[
+removepkg {{ package_name }}
+
+rm -rf /usr/local/emhttp/plugins/{{ name }}
+rm -rf /boot/config/plugins/{{ name }}
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>

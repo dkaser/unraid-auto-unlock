@@ -1,0 +1,9 @@
+{
+    "name": "plugin-name",
+    "package_name": "unraid-plugin-template",
+    "author": "Your Name",
+    "min": "7.0.0",
+    "icon": "folder",
+    "support": "https://...",
+    "launch": "Tools/Something"
+}

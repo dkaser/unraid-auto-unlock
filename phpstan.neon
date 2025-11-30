@@ -1,0 +1,10 @@
+parameters:
+	level: 9
+	fileExtensions:
+		- php
+		- page
+		- inc
+	paths:
+		- src
+	excludePaths:
+		- */vendor/*

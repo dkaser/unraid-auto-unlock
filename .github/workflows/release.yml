@@ -1,0 +1,15 @@
+on:
+  release:
+    types:
+      - prereleased
+      - released
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: dkaser/unraid-plugin-release-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
