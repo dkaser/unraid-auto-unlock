@@ -35,7 +35,7 @@ $csrfToken = Utils::getCsrfToken();
         <p><strong><?= $tr->tr("not_shown_again"); ?></strong></p>
     </div>
     <pre id="command_output"></pre>
-    <input type="button" onclick="location.reload()" value="<?= $tr->tr("continue"); ?>" />
+    <input type="button" id="continue_button" disabled onclick="location.reload()" value="<?= $tr->tr("continue"); ?>" />
 </div>
 
 <?php
@@ -100,8 +100,10 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
             document.getElementById('command_output').textContent = await response.text();
             document.querySelector('.share_instructions').style.display = 'block';
+            document.getElementById('continue_button').disabled = false;
         } catch (error) {
             document.getElementById('command_output').textContent = 'Error during initialization: ' + error.message;
+            document.getElementById('continue_button').disabled = false;
         }
     }
 
@@ -195,6 +197,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
         } catch (error) {
             document.getElementById('command_output').textContent = 'Error during path test: ' + error.message;
         }
+        document.getElementById('continue_button').disabled = false;
 }
 
     async function testConfig() {
@@ -218,6 +221,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
         } catch (error) {
             document.getElementById('command_output').textContent = 'Error during configuration test: ' + error.message;
         }
+        document.getElementById('continue_button').disabled = false;
     }
 </script>
 
