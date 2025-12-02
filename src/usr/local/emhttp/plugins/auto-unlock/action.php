@@ -50,10 +50,10 @@ $app->post("{$prefix}/initialize", function (Request $request, Response $respons
 
     $sharesTotal  = isset($data['shares_total']) ? (int) $data['shares_total'] : 5;
     $sharesUnlock = isset($data['shares_unlock']) ? (int) $data['shares_unlock'] : 3;
-    $keyfileData  = isset($data['keyfile_data']) ? $data['keyfile_data'] : null;
+    $keyfileData  = isset($data['keyfile_data']) ? (string) $data['keyfile_data'] : null;
 
-    $keyFileParts   = explode(';base64,', $keyfileData);
-    $keyFileContent = end($keyFileParts);
+    $keyFileParts   = explode(';base64,', $keyfileData ?? '');
+    $keyFileContent = end($keyFileParts) ?: '';
 
     if (empty($keyFileContent)) {
         $response->getBody()->write("Error: No keyfile provided.");
@@ -80,24 +80,26 @@ $app->post("{$prefix}/initialize", function (Request $request, Response $respons
     $output = array();
     $retval = null;
 
-    $process = new Process([
-        '/usr/local/php/unraid-auto-unlock/bin/autounlock',
-        '--pretty',
-        '--setup',
-        '--shares', $sharesTotal,
-        '--threshold', $sharesUnlock
-    ]);
-    $process->run();
+    try {
+        $process = new Process([
+            '/usr/local/php/unraid-auto-unlock/bin/autounlock',
+            '--pretty',
+            '--setup',
+            '--shares', $sharesTotal,
+            '--threshold', $sharesUnlock
+        ]);
+        $process->run();
 
-    // Clean up temporary keyfile if it still exists
-    if (file_exists('/root/keyfile')) {
-        unlink('/root/keyfile');
-    }
-
-    if ($process->isSuccessful()) {
-        $result = $process->getOutput();
-    } else {
-        $result = "Error during initialization.";
+        if ($process->isSuccessful()) {
+            $result = $process->getOutput();
+        } else {
+            $result = "Error during initialization.";
+        }
+    } finally {
+        // Clean up temporary keyfile if it still exists
+        if (file_exists('/root/keyfile')) {
+            unlink('/root/keyfile');
+        }
     }
 
     $responseBody = $result . PHP_EOL . PHP_EOL . "Log:" . PHP_EOL . $process->getErrorOutput();
