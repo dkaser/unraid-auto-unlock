@@ -4,6 +4,6 @@ api_token_env: CROWDIN_PERSONAL_TOKEN
 preserve_hierarchy: true
 
 files:
-  - source: /src/usr/local/emhttp/plugins/plugin-name/locales/en_US.json
-    dest: /unraid-pluginname/en_US.json
-    translation: /src/usr/local/emhttp/plugins/plugin-name/locales/%locale_with_underscore%.json
+  - source: /src/usr/local/emhttp/plugins/auto-unlock/locales/en_US.json
+    dest: /unraid-auto-unlock/en_US.json
+    translation: /src/usr/local/emhttp/plugins/auto-unlock/locales/%locale_with_underscore%.json
