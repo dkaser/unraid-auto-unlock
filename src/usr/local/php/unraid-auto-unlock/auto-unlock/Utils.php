@@ -38,6 +38,9 @@ class Utils extends \EDACerton\PluginUtils\Utils
     public static function getCsrfToken(): string
     {
         $var_ini = parse_ini_file("/var/local/emhttp/var.ini");
-        return $var_ini['csrf_token'] ?? '';
+        if ($var_ini === false || !isset($var_ini['csrf_token'])) {
+            return '';
+        }
+        return (string) $var_ini['csrf_token'];
     }
 }

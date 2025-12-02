@@ -55,6 +55,16 @@ $app->post("{$prefix}/initialize", function (Request $request, Response $respons
     $keyFileParts   = explode(';base64,', $keyfileData);
     $keyFileContent = end($keyFileParts);
 
+    if (empty($keyFileContent)) {
+        $response->getBody()->write("Error: No keyfile provided.");
+        return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
+    }
+
+    if ($sharesUnlock < 1 || $sharesTotal < 1 || $sharesUnlock > $sharesTotal || $sharesTotal > 100 || $sharesUnlock > 100) {
+        $response->getBody()->write("Error: Invalid share configuration.");
+        return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
+    }
+
     file_put_contents('/root/keyfile', base64_decode($keyFileContent));
 
     $output = array();
@@ -108,6 +118,8 @@ $app->post("{$prefix}/test_path", function (Request $request, Response $response
 
     $output = array();
     $retval = null;
+
+    $testPath = escapeshellarg($testPath);
     exec("/usr/local/php/unraid-auto-unlock/bin/autounlock --pretty --debug --test-path {$testPath} 2>&1", $output, $retval);
 
     $responseBody = "Testing path: {$testPath}" . PHP_EOL;

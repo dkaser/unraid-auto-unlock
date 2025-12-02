@@ -45,7 +45,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
 <script type="text/javascript">
     function clearKeyfile() {
-        document.getElementById('keyfile').value = null;
+        document.getElementById('keyfile').value = "";
         document.getElementById('clear_file').disabled = true;
         document.getElementById('passphrase').disabled = false;
         verifyInitializeInputs();
@@ -93,15 +93,18 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
         console.log('Submitting initialization data...');
 
-        const response = await fetch('/plugins/auto-unlock/action.php/initialize', {
-            method: 'POST',
-            body: formData,
-            signal: AbortSignal.timeout(30000)
-        })
+        try {
+            const response = await fetch('/plugins/auto-unlock/action.php/initialize', {
+                method: 'POST',
+                body: formData,
+                signal: AbortSignal.timeout(30000)
+            })
 
-        console.log('Initialization response received.');
-        document.getElementById('command_output').textContent = await response.text();
-        document.querySelector('.share_instructions').style.display = 'block';
+            document.getElementById('command_output').textContent = await response.text();
+            document.querySelector('.share_instructions').style.display = 'block';
+        } catch (error) {
+            document.getElementById('command_output').textContent = 'Error during initialization: ' + error.message;
+        }
     }
 
     function verifyInitializeInputs() {
@@ -165,7 +168,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 </div>
 
 <?php } else {
-    $text = @file_get_contents(Utils::CONFIG_FILE);
+    $text = file_exists(Utils::CONFIG_FILE) ? file_get_contents(Utils::CONFIG_FILE) : '';
     ?>
 <div class="config_forms">
 <script type="text/javascript">
@@ -182,15 +185,19 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
             'csrf_token': '<?= $csrfToken; ?>'
         });
 
-        const response = await fetch('/plugins/auto-unlock/action.php/test_path', {
-            method: 'POST',
-            body: formData,
-            signal: AbortSignal.timeout(20000)
-        });
+        try {
+            const response = await fetch('/plugins/auto-unlock/action.php/test_path', {
+                method: 'POST',
+                body: formData,
+                signal: AbortSignal.timeout(20000)
+            });
 
-        const result = await response.text();
-        document.getElementById('command_output').textContent = result;
-    }
+            const result = await response.text();
+            document.getElementById('command_output').textContent = result;
+        } catch (error) {
+            document.getElementById('command_output').textContent = 'Error during path test: ' + error.message;
+        }
+}
 
     async function testConfig() {
         const formData = new URLSearchParams({
@@ -201,6 +208,18 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
         document.querySelector('.config_forms').style.display = 'none';
         document.getElementById('command_output').textContent = "Testing configuration... Please wait.";
 
+        try {
+            const response = await fetch('/plugins/auto-unlock/action.php/test', {
+                method: 'POST',
+                body: formData,
+                signal: AbortSignal.timeout(60000)
+            });
+
+            const result = await response.text();
+            document.getElementById('command_output').textContent = result;
+        } catch (error) {
+            document.getElementById('command_output').textContent = 'Error during configuration test: ' + error.message;
+        }
         const response = await fetch('/plugins/auto-unlock/action.php/test', {
             method: 'POST',
             body: formData,
@@ -229,7 +248,6 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 	<span><input type="submit" value='<?= $tr->tr('apply'); ?>'><input type="button" value="<?= $tr->tr('done'); ?>" onclick="done()"></span>
 	</dd></dl>
 
-	</form>
 </form>
 
 <table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("test_path"); ?></td></tr></thead></table>
