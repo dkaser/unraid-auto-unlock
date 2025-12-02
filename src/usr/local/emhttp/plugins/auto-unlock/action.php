@@ -65,7 +65,17 @@ $app->post("{$prefix}/initialize", function (Request $request, Response $respons
         return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
     }
 
-    file_put_contents('/root/keyfile', base64_decode($keyFileContent));
+    $decodedKeyfile = base64_decode($keyFileContent, true);
+    if ($decodedKeyfile === false) {
+        $response->getBody()->write("Error: Invalid keyfile encoding.");
+        return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
+    }
+
+    if (file_put_contents('/root/keyfile', $decodedKeyfile) === false) {
+        $response->getBody()->write("Error: Unable to write temporary keyfile.");
+        return $response->withHeader('Content-Type', 'text/plain')->withStatus(500);
+    }
+    @chmod('/root/keyfile', 0600);
 
     $output = array();
     $retval = null;
