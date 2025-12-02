@@ -91,8 +91,6 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
             'csrf_token': '<?= $csrfToken; ?>'
         });
 
-        console.log('Submitting initialization data...');
-
         try {
             const response = await fetch('/plugins/auto-unlock/action.php/initialize', {
                 method: 'POST',
