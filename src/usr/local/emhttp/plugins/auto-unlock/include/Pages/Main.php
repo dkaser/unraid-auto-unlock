@@ -220,14 +220,6 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
         } catch (error) {
             document.getElementById('command_output').textContent = 'Error during configuration test: ' + error.message;
         }
-        const response = await fetch('/plugins/auto-unlock/action.php/test', {
-            method: 'POST',
-            body: formData,
-            signal: AbortSignal.timeout(60000)
-        });
-
-        const result = await response.text();
-        document.getElementById('command_output').textContent = result;
     }
 </script>
 

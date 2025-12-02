@@ -119,8 +119,8 @@ $app->post("{$prefix}/test_path", function (Request $request, Response $response
     $output = array();
     $retval = null;
 
-    $testPath = escapeshellarg($testPath);
-    exec("/usr/local/php/unraid-auto-unlock/bin/autounlock --pretty --debug --test-path {$testPath} 2>&1", $output, $retval);
+    $safePath = escapeshellarg($testPath);
+    exec("/usr/local/php/unraid-auto-unlock/bin/autounlock --pretty --debug --test-path {$safePath} 2>&1", $output, $retval);
 
     $responseBody = "Testing path: {$testPath}" . PHP_EOL;
     if ($retval != 0) {
