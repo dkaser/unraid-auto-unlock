@@ -3,6 +3,7 @@ on:
     types:
       - prereleased
       - released
+      - published
 
 jobs:
   build:
@@ -13,3 +14,9 @@ jobs:
       - uses: dkaser/unraid-plugin-release-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          composer_dir: "src/usr/local/php/unraid-auto-unlock/"
+          go_dir: "autounlock"
+          build_prereleases: true
+          build_script: |
+            cd autounlock
+            ./build.sh
