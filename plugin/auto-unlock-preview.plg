@@ -4,9 +4,9 @@
 <PLUGIN 
   name="auto-unlock"
   author="Derek Kaser"
-  version="0.0.1"
+  version="0.0.2"
   launch="Tools/Auto Unlock"
-  pluginURL="https://raw.githubusercontent.com/dkaser/unraid-auto-unlock/main/plugin/auto-unlock.plg"
+  pluginURL="https://raw.githubusercontent.com/dkaser/unraid-auto-unlock/main/plugin/auto-unlock-preview.plg"
   support="https://..."
   min="7.2.0"
   
@@ -15,6 +15,10 @@
 
 <CHANGES>
 <![CDATA[
+
+### 0.0.2
+
+- Test release
 
 ### 0.0.1
 
@@ -25,9 +29,9 @@ For older releases, see https://github.com/dkaser/unraid-auto-unlock/releases
 ]]>
 </CHANGES>
 
-<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-0.0.1-noarch-1.txz">
-<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/0.0.1/unraid-auto-unlock-0.0.1-noarch-1.txz</URL>
-<SHA256>06c7534698c0abc0f798f5d936cb8a41310e0f2c9d330677b5a07824c517abbc</SHA256>
+<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-0.0.2-noarch-1.txz">
+<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/0.0.2/unraid-auto-unlock-0.0.2-noarch-1.txz</URL>
+<SHA256>4095477d1dec8b6c1d5ce9d9d8e59671fbed3df1c183d7d4a2a855df17feef32</SHA256>
 </FILE>
 
 <!--
@@ -36,15 +40,15 @@ The 'install' script.
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-0.0.1-noarch-1.txz
+upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-0.0.2-noarch-1.txz
 
 # cleanup old versions
-rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '0.0.1')
+rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '0.0.2')
 
 echo ""
 echo "----------------------------------------------------"
 echo " auto-unlock has been installed."
-echo " Version: 0.0.1"
+echo " Version: 0.0.2"
 echo "----------------------------------------------------"
 echo ""
 ]]>
