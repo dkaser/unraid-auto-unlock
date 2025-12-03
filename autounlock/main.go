@@ -28,6 +28,11 @@ var args struct {
 }
 
 func main() {
+	if !IsUnraid() {
+		fmt.Fprintf(os.Stderr, "This program can only be run on Unraid systems\n")
+		os.Exit(1)
+	}
+
 	err := arg.Parse(&args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)

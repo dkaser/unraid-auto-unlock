@@ -19,6 +19,12 @@ type BlockDevices struct {
 	} `json:"blockdevices"`
 }
 
+func IsUnraid() bool {
+	_, err := os.Stat("/etc/unraid-version")
+
+	return err == nil
+}
+
 func TestKeyfile() error {
 	log.Info().Str("keyfile", args.KeyFile).Msg("Verifying that key can unlock disks")
 
