@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -145,6 +146,10 @@ func GetShares(
 	}
 
 	for {
+		if (!VerifyArrayStatus("Stopped")) && !test {
+			return nil, errors.New("array is no longer stopped, aborting share retrieval")
+		}
+
 		for pathNum, path := range paths {
 			// Skip paths we've already tried
 			if triedPaths[path] {
