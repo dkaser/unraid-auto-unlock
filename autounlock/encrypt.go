@@ -7,6 +7,11 @@ import (
 	"os"
 )
 
+const (
+	encryptionKeyBytes = 32
+	encryptionFileMode = 0o600
+)
+
 func trimKey(key []byte, length int) ([]byte, error) {
 	if len(key) < length {
 		return nil, fmt.Errorf(
@@ -25,7 +30,7 @@ func EncryptFile(inputPath string, outputPath string, key []byte, nonce []byte) 
 		return fmt.Errorf("failed to read input file: %w", err)
 	}
 
-	key, err = trimKey(key, 32)
+	key, err = trimKey(key, encryptionKeyBytes)
 	if err != nil {
 		return fmt.Errorf("failed to trim key: %w", err)
 	}
@@ -47,7 +52,7 @@ func EncryptFile(inputPath string, outputPath string, key []byte, nonce []byte) 
 
 	ciphertext := gcm.Seal(nil, nonce, fileBytes, nil)
 
-	err = os.WriteFile(outputPath, ciphertext, 0o600)
+	err = os.WriteFile(outputPath, ciphertext, encryptionFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}
@@ -61,7 +66,7 @@ func DecryptFile(inputPath string, outputPath string, key []byte, nonce []byte) 
 		return fmt.Errorf("failed to read input file: %w", err)
 	}
 
-	key, err = trimKey(key, 32)
+	key, err = trimKey(key, encryptionKeyBytes)
 	if err != nil {
 		return fmt.Errorf("failed to trim key: %w", err)
 	}
@@ -86,7 +91,7 @@ func DecryptFile(inputPath string, outputPath string, key []byte, nonce []byte) 
 		return fmt.Errorf("failed to decrypt file: %w", err)
 	}
 
-	err = os.WriteFile(outputPath, plaintext, 0o600)
+	err = os.WriteFile(outputPath, plaintext, encryptionFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}

@@ -8,6 +8,10 @@ import (
 	"fmt"
 )
 
+const (
+	signatureBytes = 32
+)
+
 func SignShare(key []byte, message []byte) ([]byte, error) {
 	mac, err := calculateHMAC(key, message)
 	if err != nil {
@@ -29,13 +33,13 @@ func calculateHMAC(key []byte, message []byte) ([]byte, error) {
 }
 
 func VerifyShare(signedMessage []byte, key []byte) ([]byte, error) {
-	if len(signedMessage) < 32 {
+	if len(signedMessage) < signatureBytes {
 		return nil, errors.New("signed message too short")
 	}
 
 	// Split the signed message into the original message and the signature (last 32 bytes).
-	message := signedMessage[:len(signedMessage)-32]
-	signature := signedMessage[len(signedMessage)-32:]
+	message := signedMessage[:len(signedMessage)-signatureBytes]
+	signature := signedMessage[len(signedMessage)-signatureBytes:]
 
 	expectedMAC, err := calculateHMAC(key, message)
 	if err != nil {
@@ -50,7 +54,7 @@ func VerifyShare(signedMessage []byte, key []byte) ([]byte, error) {
 }
 
 func GenerateSigningKey() ([]byte, error) {
-	key := make([]byte, 32)
+	key := make([]byte, signatureBytes)
 
 	_, err := rand.Read(key)
 	if err != nil {
