@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/ini.v1"
@@ -16,6 +17,12 @@ type BlockDevices struct {
 		Name   string `json:"name"`
 		Fstype string `json:"fstype"`
 	} `json:"blockdevices"`
+}
+
+func IsUnraid() bool {
+	_, err := os.Stat("/etc/unraid-version")
+
+	return err == nil
 }
 
 func TestKeyfile() error {
@@ -77,16 +84,50 @@ func TestKeyfile() error {
 	return errors.New("keyfile could not decrypt any LUKS devices")
 }
 
-func VerifyArrayStopped() bool {
+func WaitForVarIni() error {
+	retryDuration := 15 * time.Second
+	timeout := 15 * time.Minute
+	deadline := time.Now().Add(timeout)
+
+	for {
+		_, err := os.Stat("/var/local/emhttp/var.ini")
+		if err == nil {
+			fsState, err := GetFsState()
+			if err == nil && fsState != "" {
+				log.Debug().Str("fsState", fsState).Msg("var.ini found and readable")
+
+				return nil
+			}
+		}
+
+		if time.Now().After(deadline) {
+			return errors.New("timed out waiting for var.ini to be ready")
+		}
+
+		log.Debug().Msg("var.ini not ready, retrying in 15 seconds")
+		time.Sleep(retryDuration)
+	}
+}
+
+func GetFsState() (string, error) {
 	cfg, err := ini.Load("/var/local/emhttp/var.ini")
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("Failed to read var.ini")
-
-		return false
+		return "", fmt.Errorf("failed to read var.ini: %w", err)
 	}
 
 	fsState := cfg.Section("").Key("fsState").String()
 	log.Debug().Str("fsState", fsState).Msg("Read fsState from var.ini")
+
+	return fsState, nil
+}
+
+func VerifyArrayStopped() bool {
+	fsState, err := GetFsState()
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Failed to get fsState")
+
+		return false
+	}
 
 	return fsState == "Stopped"
 }

@@ -28,7 +28,18 @@ var args struct {
 }
 
 func main() {
-	err := arg.Parse(&args)
+	if !IsUnraid() {
+		fmt.Fprintf(os.Stderr, "This program can only be run on Unraid systems\n")
+		os.Exit(1)
+	}
+
+	err := WaitForVarIni()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "emhttp initialization timeout: %v\n", err)
+		os.Exit(1)
+	}
+
+	err = arg.Parse(&args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		os.Exit(1)
@@ -113,7 +124,12 @@ func Setup() {
 }
 
 func Unlock() {
-	shardPaths, err := readPathsFromFile(args.Config)
+	if !VerifyArrayStopped() {
+		log.Error().Msg("Array is running, cannot unlock")
+		os.Exit(1)
+	}
+
+	sharePaths, err := readPathsFromFile(args.Config)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Failed to read paths from config file")
 		os.Exit(1)
@@ -125,7 +141,7 @@ func Unlock() {
 		os.Exit(1)
 	}
 
-	shares, err := GetShares(shardPaths, state, args.RetryDelay, args.Test)
+	shares, err := GetShares(sharePaths, state, args.RetryDelay, args.Test)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Failed to get shares")
 		os.Exit(1)
