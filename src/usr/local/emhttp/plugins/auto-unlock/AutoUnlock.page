@@ -1,6 +1,7 @@
 Menu="Utilities"
 Title="Automatic Disk Unlock"
 Markdown="false"
+Icon="unlock"
 ---
 <?php
 
