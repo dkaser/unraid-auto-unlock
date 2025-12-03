@@ -180,6 +180,11 @@ func Unlock() error {
 		return fmt.Errorf("failed to start array: %w", err)
 	}
 
+	err = WaitForArrayStarted()
+	if err != nil {
+		return fmt.Errorf("failed to verify array started: %w", err)
+	}
+
 	return nil
 }
 
