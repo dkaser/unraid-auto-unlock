@@ -1,9 +1,9 @@
 {
-    "name": "plugin-name",
-    "package_name": "unraid-plugin-template",
-    "author": "Your Name",
-    "min": "7.0.0",
+    "name": "auto-unlock",
+    "package_name": "unraid-auto-unlock",
+    "author": "Derek Kaser",
+    "min": "7.2.0",
     "icon": "folder",
     "support": "https://...",
-    "launch": "Tools/Something"
+    "launch": "Tools/Auto Unlock"
 }

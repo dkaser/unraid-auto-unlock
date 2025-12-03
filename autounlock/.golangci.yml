@@ -1,0 +1,29 @@
+version: "2"
+linters:
+  default: all
+  disable:
+    - wsl # Superseded by wsl_v5
+    - cyclop
+    - depguard
+    - err113
+    - exhaustruct
+    - forbidigo
+    - gochecknoglobals
+    - mnd
+    - noctx
+    - lll
+    - funlen
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golines
+    - swaggo

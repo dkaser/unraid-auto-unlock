@@ -1,9 +1,9 @@
-                      |-----handy-ruler------------------------------------------------------|
-unraid-plugin-template: unraid-plugin-template
-unraid-plugin-template:
-unraid-plugin-template: Sample slack-desc file
-unraid-plugin-template: 
-unraid-plugin-template: 
-unraid-plugin-template:
-unraid-plugin-template: https://github.com/dkaser/unraid-plugin-template
-unraid-plugin-template:
+                  |-----handy-ruler------------------------------------------------------|
+unraid-auto-unlock: unraid-auto-unlock
+unraid-auto-unlock:
+unraid-auto-unlock: Automatically unlocks and starts an encrypted Unraid array
+unraid-auto-unlock: using a distributed secret to protect the encryption key.
+unraid-auto-unlock: 
+unraid-auto-unlock:
+unraid-auto-unlock: https://github.com/dkaser/unraid-auto-unlock
+unraid-auto-unlock:

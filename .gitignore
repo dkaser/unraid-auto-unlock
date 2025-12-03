@@ -2,3 +2,5 @@
 ._.DS_Store
 .php-cs-fixer.cache
 vendor
+autounlock/autounlock
+src/usr/local/php/unraid-auto-unlock/bin/autounlock

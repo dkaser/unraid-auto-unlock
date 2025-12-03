@@ -1,6 +1,8 @@
+Menu="Utilities"
+Title="Automatic Disk Unlock"
+Markdown="false"
+---
 <?php
-
-namespace PluginName;
 
 /*
     Copyright (C) 2025  Derek Kaser
@@ -19,9 +21,11 @@ namespace PluginName;
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-$tr = $tr ?? new Translator();
+try {
+    $docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
+    require_once "{$docroot}/plugins/auto-unlock/include/page.php";
 
-if ( ! defined(__NAMESPACE__ . '\PLUGIN_NAME')) {
-    throw new \RuntimeException("PLUGIN_NAME not defined");
+    echo AutoUnlock\getPage("Main", true, array());
+} catch (Throwable $e) {
+    echo "An error occurred: <pre>" . print_r($e, true) . "</pre>";
 }
-?>

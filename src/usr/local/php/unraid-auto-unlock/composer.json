@@ -1,16 +1,16 @@
 {
-    "name": "repo/unraid-pluginname",
-    "description": "Plugin Name",
+    "name": "repo/unraid-auto-unlock",
+    "description": "Auto Unlock Plugin for Unraid",
     "type": "library",
     "license": "GPL-3.0-or-later",
     "autoload": {
         "psr-4": {
-            "Path\\Path\\": "unraid-pluginname/"
+            "AutoUnlock\\": "auto-unlock/"
         }
     },
     "authors": [
         {
-            "name": "Name"
+            "name": "Derek Kaser"
         }
     ],
     "require-dev": {
@@ -28,6 +28,9 @@
         }
     ],
     "require": {
-        "edacerton/plugin-utils": "^1.0"
+        "edacerton/plugin-utils": "^1.0",
+        "slim/psr7": "^1.8",
+        "slim/slim": "^4.15",
+        "symfony/process": "^7.4"
     }
 }

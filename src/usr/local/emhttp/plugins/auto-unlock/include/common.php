@@ -1,6 +1,6 @@
 <?php
 
-namespace PluginName;
+namespace AutoUnlock;
 
 /*
     Copyright (C) 2025  Derek Kaser
@@ -20,7 +20,7 @@ namespace PluginName;
 */
 
 define(__NAMESPACE__ . "\PLUGIN_ROOT", dirname(dirname(__FILE__)));
-define(__NAMESPACE__ . "\PLUGIN_NAME", "plugin.name");
+define(__NAMESPACE__ . "\PLUGIN_NAME", "auto-unlock");
 
 // @phpstan-ignore requireOnce.fileNotFound
-require_once "/usr/local/php/plugin-name/vendor/autoload.php";
+require_once "/usr/local/php/unraid-auto-unlock/vendor/autoload.php";

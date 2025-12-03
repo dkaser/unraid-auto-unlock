@@ -1,6 +1,6 @@
 <?php
 
-namespace PluginName;
+namespace AutoUnlock;
 
 /*
     Copyright (C) 2025  Derek Kaser
@@ -50,8 +50,13 @@ function includePage(string $filename, array $params = array()): string
 
     if (is_file($filename)) {
         ob_start();
-        include $filename;
-        return ob_get_clean() ?: "";
+        try {
+            include $filename;
+            return ob_get_clean() ?: "";
+        } catch (\Throwable $e) {
+            ob_end_clean();
+            throw $e;
+        }
     }
     return "";
 }
