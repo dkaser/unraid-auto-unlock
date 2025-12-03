@@ -84,8 +84,10 @@ func TestKeyfile() error {
 	return errors.New("keyfile could not decrypt any LUKS devices")
 }
 
-func WaitForVarIni() {
-	retryDuration := time.Duration(15) * time.Second
+func WaitForVarIni() error {
+	retryDuration := 15 * time.Second
+	timeout := 15 * time.Minute
+	deadline := time.Now().Add(timeout)
 
 	for {
 		_, err := os.Stat("/var/local/emhttp/var.ini")
@@ -94,8 +96,12 @@ func WaitForVarIni() {
 			if err == nil && fsState != "" {
 				log.Debug().Str("fsState", fsState).Msg("var.ini found and readable")
 
-				return
+				return nil
 			}
+		}
+
+		if time.Now().After(deadline) {
+			return errors.New("timed out waiting for var.ini to be ready")
 		}
 
 		log.Debug().Msg("var.ini not ready, retrying in 15 seconds")

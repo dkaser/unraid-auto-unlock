@@ -118,7 +118,11 @@ func Setup() {
 }
 
 func Unlock() {
-	WaitForVarIni()
+	err := WaitForVarIni()
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Failed to wait for var.ini")
+		os.Exit(1)
+	}
 
 	if !VerifyArrayStopped() {
 		log.Error().Msg("Array is running, cannot unlock")
