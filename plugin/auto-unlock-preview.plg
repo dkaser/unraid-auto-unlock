@@ -4,7 +4,7 @@
 <PLUGIN 
   name="auto-unlock"
   author="Derek Kaser"
-  version="2025.12.03.0427"
+  version="2025.12.03.0512"
   launch="Tools/Auto Unlock"
   pluginURL="https://raw.githubusercontent.com/dkaser/unraid-auto-unlock/main/plugin/auto-unlock-preview.plg"
   support="https://..."
@@ -15,6 +15,12 @@
 
 <CHANGES>
 <![CDATA[
+
+### 2025.12.03.0512
+
+### 🐛 Bug Fixes
+
+- Monitor for array start, remove keyfile after startup ([#3](https://github.com/dkaser/unraid-auto-unlock/pull/3))
 
 ### 2025.12.03.0427
 
@@ -31,9 +37,9 @@ For older releases, see https://github.com/dkaser/unraid-auto-unlock/releases
 ]]>
 </CHANGES>
 
-<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2025.12.03.0427-noarch-1.txz">
-<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2025.12.03.0427/unraid-auto-unlock-2025.12.03.0427-noarch-1.txz</URL>
-<SHA256>3bc1cc0be36ac2fa377f46bed6bc08cb124f847ea1993559955f65ad885c825c</SHA256>
+<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2025.12.03.0512-noarch-1.txz">
+<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2025.12.03.0512/unraid-auto-unlock-2025.12.03.0512-noarch-1.txz</URL>
+<SHA256>2349f434da16ea57ffccc96a1df5ee00946d3dcec191f02fb5d390fbf258813d</SHA256>
 </FILE>
 
 <!--
@@ -42,15 +48,15 @@ The 'install' script.
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2025.12.03.0427-noarch-1.txz
+upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2025.12.03.0512-noarch-1.txz
 
 # cleanup old versions
-rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2025.12.03.0427')
+rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2025.12.03.0512')
 
 echo ""
 echo "----------------------------------------------------"
 echo " auto-unlock has been installed."
-echo " Version: 2025.12.03.0427"
+echo " Version: 2025.12.03.0512"
 echo "----------------------------------------------------"
 echo ""
 ]]>
