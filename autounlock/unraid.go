@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/ini.v1"
@@ -77,16 +78,44 @@ func TestKeyfile() error {
 	return errors.New("keyfile could not decrypt any LUKS devices")
 }
 
-func VerifyArrayStopped() bool {
+func WaitForVarIni() {
+	retryDuration := time.Duration(15) * time.Second
+
+	for {
+		_, err := os.Stat("/var/local/emhttp/var.ini")
+		if err == nil {
+			fsState, err := GetFsState()
+			if err == nil && fsState != "" {
+				log.Debug().Str("fsState", fsState).Msg("var.ini found and readable")
+
+				return
+			}
+		}
+
+		log.Debug().Msg("var.ini not ready, retrying in 15 seconds")
+		time.Sleep(retryDuration)
+	}
+}
+
+func GetFsState() (string, error) {
 	cfg, err := ini.Load("/var/local/emhttp/var.ini")
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("Failed to read var.ini")
-
-		return false
+		return "", fmt.Errorf("failed to read var.ini: %w", err)
 	}
 
 	fsState := cfg.Section("").Key("fsState").String()
 	log.Debug().Str("fsState", fsState).Msg("Read fsState from var.ini")
+
+	return fsState, nil
+}
+
+func VerifyArrayStopped() bool {
+	fsState, err := GetFsState()
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Failed to get fsState")
+
+		return false
+	}
 
 	return fsState == "Stopped"
 }
