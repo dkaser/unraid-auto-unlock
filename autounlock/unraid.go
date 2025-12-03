@@ -177,7 +177,7 @@ func WaitForArrayStarted() error {
 			return errors.New("timed out waiting for array to start")
 		}
 
-		log.Debug().Msg("Array not started yet, retrying in 15 seconds")
+		log.Debug().Int("delaySeconds", int(arrayRetryDelay.Seconds())).Msg("Array not started yet, retrying")
 		time.Sleep(arrayRetryDelay)
 	}
 }
