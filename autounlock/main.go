@@ -124,7 +124,7 @@ func Setup() {
 }
 
 func Unlock() {
-	if !VerifyArrayStopped() {
+	if !VerifyArrayStopped() && !args.Test {
 		log.Error().Msg("Array is running, cannot unlock")
 		os.Exit(1)
 	}
