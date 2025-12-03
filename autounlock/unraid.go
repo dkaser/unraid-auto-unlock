@@ -108,7 +108,7 @@ func WaitForVarIni() error {
 			return errors.New("timed out waiting for var.ini to be ready")
 		}
 
-		log.Debug().Msg("var.ini not ready, retrying in 15 seconds")
+		log.Debug().Int("delaySeconds", int(arrayRetryDelay.Seconds())).Msg("var.ini not ready, retrying")
 		time.Sleep(arrayRetryDelay)
 	}
 }
