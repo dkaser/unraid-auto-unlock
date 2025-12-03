@@ -28,18 +28,7 @@ var args struct {
 }
 
 func main() {
-	if !IsUnraid() {
-		fmt.Fprintf(os.Stderr, "This program can only be run on Unraid systems\n")
-		os.Exit(1)
-	}
-
-	err := WaitForVarIni()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "emhttp initialization timeout: %v\n", err)
-		os.Exit(1)
-	}
-
-	err = arg.Parse(&args)
+	err := arg.Parse(&args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		os.Exit(1)
@@ -59,6 +48,17 @@ func main() {
 	if args.Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		log.Debug().Msg("Debug logging enabled")
+	}
+
+	if !IsUnraid() {
+		log.Error().Msg("This program can only be run on Unraid OS")
+		os.Exit(1)
+	}
+
+	err = WaitForVarIni()
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("emhttp initialization timeout")
+		os.Exit(1)
 	}
 
 	switch {
