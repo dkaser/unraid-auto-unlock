@@ -33,7 +33,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	err := arg.Parse(&args)
+	err := WaitForVarIni()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "emhttp initialization timeout: %v\n", err)
+		os.Exit(1)
+	}
+
+	err = arg.Parse(&args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
 		os.Exit(1)
@@ -118,12 +124,6 @@ func Setup() {
 }
 
 func Unlock() {
-	err := WaitForVarIni()
-	if err != nil {
-		log.Error().Stack().Err(err).Msg("Failed to wait for var.ini")
-		os.Exit(1)
-	}
-
 	if !VerifyArrayStopped() {
 		log.Error().Msg("Array is running, cannot unlock")
 		os.Exit(1)
