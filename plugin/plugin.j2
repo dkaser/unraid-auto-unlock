@@ -6,7 +6,7 @@
   author="{{ author }}"
   version="{{ env['PLUGIN_VERSION'] }}"
   {% if launch is defined %}launch="{{ launch }}"{% endif %}
-  pluginURL="https://raw.githubusercontent.com/{{ env['GITHUB_REPOSITORY'] }}/main/plugin/{{ name }}.plg"
+  pluginURL="https://raw.githubusercontent.com/{{ env['GITHUB_REPOSITORY'] }}/main/plugin/{{ name }}{{ env['PLUGIN_RELEASE'] }}.plg"
   {% if support is defined %}support="{{ support }}"{% endif %}
   {% if min is defined %}min="{{ min }}"{% endif %}
   {% if max is defined %}max="{{ max }}"{% endif %}
