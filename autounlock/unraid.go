@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -121,7 +122,7 @@ func GetFsState() (string, error) {
 	return fsState, nil
 }
 
-func VerifyArrayStopped() bool {
+func VerifyArrayStatus(status string) bool {
 	fsState, err := GetFsState()
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Failed to get fsState")
@@ -129,7 +130,7 @@ func VerifyArrayStopped() bool {
 		return false
 	}
 
-	return fsState == "Stopped"
+	return strings.EqualFold(fsState, status)
 }
 
 func StartArray() error {
@@ -138,7 +139,7 @@ func StartArray() error {
 		return fmt.Errorf("keyfile not found: %w", err)
 	}
 
-	if !VerifyArrayStopped() {
+	if !VerifyArrayStatus("Stopped") {
 		return errors.New("array is not stopped")
 	}
 
@@ -157,4 +158,25 @@ func StartArray() error {
 	log.Info().Msg("Array started successfully")
 
 	return nil
+}
+
+func WaitForArrayStarted() error {
+	retryDuration := 15 * time.Second
+	timeout := 15 * time.Minute
+	deadline := time.Now().Add(timeout)
+
+	for {
+		if VerifyArrayStatus("Started") {
+			log.Debug().Msg("Array has started")
+
+			return nil
+		}
+
+		if time.Now().After(deadline) {
+			return errors.New("timed out waiting for array to start")
+		}
+
+		log.Debug().Msg("Array not started yet, retrying in 15 seconds")
+		time.Sleep(retryDuration)
+	}
 }
