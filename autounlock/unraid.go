@@ -108,7 +108,9 @@ func WaitForVarIni() error {
 			return errors.New("timed out waiting for var.ini to be ready")
 		}
 
-		log.Debug().Int("delaySeconds", int(arrayRetryDelay.Seconds())).Msg("var.ini not ready, retrying")
+		log.Debug().
+			Int("delaySeconds", int(arrayRetryDelay.Seconds())).
+			Msg("var.ini not ready, retrying")
 		time.Sleep(arrayRetryDelay)
 	}
 }
@@ -177,7 +179,9 @@ func WaitForArrayStarted() error {
 			return errors.New("timed out waiting for array to start")
 		}
 
-		log.Debug().Int("delaySeconds", int(arrayRetryDelay.Seconds())).Msg("Array not started yet, retrying")
+		log.Debug().
+			Int("delaySeconds", int(arrayRetryDelay.Seconds())).
+			Msg("Array not started yet, retrying")
 		time.Sleep(arrayRetryDelay)
 	}
 }
