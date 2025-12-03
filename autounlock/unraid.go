@@ -13,6 +13,11 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+const (
+	arrayRetryDelay = 15 * time.Second
+	arrayTimeout    = 15 * time.Minute
+)
+
 type BlockDevices struct {
 	BlockDevices []struct {
 		Name   string `json:"name"`
@@ -86,9 +91,7 @@ func TestKeyfile() error {
 }
 
 func WaitForVarIni() error {
-	retryDuration := 15 * time.Second
-	timeout := 15 * time.Minute
-	deadline := time.Now().Add(timeout)
+	deadline := time.Now().Add(arrayTimeout)
 
 	for {
 		_, err := os.Stat("/var/local/emhttp/var.ini")
@@ -106,7 +109,7 @@ func WaitForVarIni() error {
 		}
 
 		log.Debug().Msg("var.ini not ready, retrying in 15 seconds")
-		time.Sleep(retryDuration)
+		time.Sleep(arrayRetryDelay)
 	}
 }
 
@@ -161,9 +164,7 @@ func StartArray() error {
 }
 
 func WaitForArrayStarted() error {
-	retryDuration := 15 * time.Second
-	timeout := 15 * time.Minute
-	deadline := time.Now().Add(timeout)
+	deadline := time.Now().Add(arrayTimeout)
 
 	for {
 		if VerifyArrayStatus("Started") {
@@ -177,6 +178,6 @@ func WaitForArrayStarted() error {
 		}
 
 		log.Debug().Msg("Array not started yet, retrying in 15 seconds")
-		time.Sleep(retryDuration)
+		time.Sleep(arrayRetryDelay)
 	}
 }

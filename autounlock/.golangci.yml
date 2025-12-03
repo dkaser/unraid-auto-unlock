@@ -9,7 +9,6 @@ linters:
     - exhaustruct
     - forbidigo
     - gochecknoglobals
-    - mnd
     - noctx
     - lll
     - funlen

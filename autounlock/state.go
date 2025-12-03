@@ -7,6 +7,11 @@ import (
 	"path/filepath"
 )
 
+const (
+	stateDirMode  = 0o700
+	stateFileMode = 0o600
+)
+
 type State struct {
 	VerificationKey []byte `json:"verificationKey"`
 	SigningKey      []byte `json:"signingKey"`
@@ -28,13 +33,13 @@ func WriteStateToFile(secret SharedSecret, stateFile string, threshold uint16) e
 	}
 
 	// Ensure the directory for the state file exists
-	err = os.MkdirAll(filepath.Dir(stateFile), 0o700)
+	err = os.MkdirAll(filepath.Dir(stateFile), stateDirMode)
 	if err != nil {
 		return fmt.Errorf("failed to create directory for state file: %w", err)
 	}
 
 	// Write the JSON data to the state file
-	err = os.WriteFile(stateFile, data, 0o600)
+	err = os.WriteFile(stateFile, data, stateFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write state file: %w", err)
 	}
