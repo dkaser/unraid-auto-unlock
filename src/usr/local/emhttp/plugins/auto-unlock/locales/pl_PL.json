@@ -1,0 +1,21 @@
+{
+    "yes": "Tak",
+    "no": "Nie",
+    "apply": "Zastosuj",
+    "initialize": "Inicjalizuj",
+    "shares_total": "Liczba udziałów do wygenerowania",
+    "shares_unlock": "Liczba udziałów do odblokowania",
+    "remove": "Usuń konfigurację",
+    "confirm": "Potwierdź",
+    "passphrase": "Hasło",
+    "keyfile": "Plik klucza",
+    "clear": "Wyczyść plik klucza",
+    "continue": "Kontynuuj",
+    "download_locations": "Lokalizacje pobierania",
+    "done": "Gotowe",
+    "test_path": "Testuj lokalizację",
+    "test": "Testuj",
+    "test_configuration": "Testuj konfigurację",
+    "share_instructions": "Bezpiecznie przechowaj każdą z wygenerowanych części. Serwer będzie musiał odzyskać co najmniej określoną liczbę części, aby odblokować dyski.",
+    "not_shown_again": "Te części nie zostaną ponownie wyświetlone."
+}

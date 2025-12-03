@@ -1,0 +1,21 @@
+{
+    "yes": "예",
+    "no": "아니오",
+    "apply": "적용",
+    "initialize": "초기화",
+    "shares_total": "생성할 공유 수",
+    "shares_unlock": "잠금 해제를 위한 공유 수",
+    "remove": "구성 제거",
+    "confirm": "확인",
+    "passphrase": "암호문",
+    "keyfile": "키파일",
+    "clear": "키파일 지우기",
+    "continue": "계속",
+    "download_locations": "다운로드 위치",
+    "done": "완료",
+    "test_path": "위치 테스트",
+    "test": "테스트",
+    "test_configuration": "구성 테스트",
+    "share_instructions": "생성된 각 공유를 안전하게 보관하십시오. 디스크를 잠금 해제하려면 서버가 지정된 수의 공유를 검색할 수 있어야 합니다.",
+    "not_shown_again": "이 공유는 다시 표시되지 않습니다."
+}

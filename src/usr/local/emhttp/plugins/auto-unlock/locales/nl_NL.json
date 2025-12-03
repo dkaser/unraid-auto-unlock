@@ -1,0 +1,21 @@
+{
+    "yes": "Ja",
+    "no": "Nee",
+    "apply": "Toepassen",
+    "initialize": "Initialiseren",
+    "shares_total": "Aantal te genereren delen",
+    "shares_unlock": "Aantal te ontgrendelen delen",
+    "remove": "Configuratie verwijderen",
+    "confirm": "Bevestigen",
+    "passphrase": "Wachtzin",
+    "keyfile": "Sleutelbestand",
+    "clear": "Sleutelbestand wissen",
+    "continue": "Doorgaan",
+    "download_locations": "Downloadlocaties",
+    "done": "Gereed",
+    "test_path": "Locatie testen",
+    "test": "Testen",
+    "test_configuration": "Configuratie testen",
+    "share_instructions": "Bewaar elk van de gegenereerde shares op een veilige manier. Uw server moet ten minste het opgegeven aantal shares kunnen ophalen om de schijven te ontgrendelen.",
+    "not_shown_again": "Deze shares worden niet opnieuw weergegeven."
+}

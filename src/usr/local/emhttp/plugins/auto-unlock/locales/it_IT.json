@@ -1,0 +1,21 @@
+{
+    "yes": "Sì",
+    "no": "No",
+    "apply": "Applica",
+    "initialize": "Inizializza",
+    "shares_total": "Numero di quote da generare",
+    "shares_unlock": "Numero di quote da sbloccare",
+    "remove": "Rimuovi configurazione",
+    "confirm": "Conferma",
+    "passphrase": "Frase segreta",
+    "keyfile": "File della chiave",
+    "clear": "Cancella file della chiave",
+    "continue": "Continua",
+    "download_locations": "Percorsi di download",
+    "done": "Fatto",
+    "test_path": "Verifica percorso",
+    "test": "Verifica",
+    "test_configuration": "Configurazione di test",
+    "share_instructions": "Conserva in modo sicuro ciascuna delle condivisioni generate. Il server dovrà essere in grado di recuperare almeno il numero specificato di condivisioni per sbloccare i dischi.",
+    "not_shown_again": "Queste condivisioni non saranno più visualizzate."
+}

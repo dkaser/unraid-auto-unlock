@@ -1,0 +1,21 @@
+{
+    "yes": "Ja",
+    "no": "Nein",
+    "apply": "Übernehmen",
+    "initialize": "Initialisieren",
+    "shares_total": "Anzahl der zu erzeugenden Anteile",
+    "shares_unlock": "Anzahl der zu entsperrenden Anteile",
+    "remove": "Konfiguration entfernen",
+    "confirm": "Bestätigen",
+    "passphrase": "Passphrase",
+    "keyfile": "Schlüsseldatei",
+    "clear": "Schlüsseldatei löschen",
+    "continue": "Weiter",
+    "download_locations": "Download-Orte",
+    "done": "Fertig",
+    "test_path": "Standort testen",
+    "test": "Test",
+    "test_configuration": "Konfiguration testen",
+    "share_instructions": "Bitte bewahren Sie jede der erzeugten Anteile sicher auf. Ihr Server muss in der Lage sein, mindestens die angegebene Anzahl von Anteilen abzurufen, um die Laufwerke zu entsperren.",
+    "not_shown_again": "Diese Anteile werden nicht erneut angezeigt."
+}

@@ -1,0 +1,21 @@
+{
+    "yes": "Sí",
+    "no": "No",
+    "apply": "Aplicar",
+    "initialize": "Inicializar",
+    "shares_total": "Cantidad de participaciones a generar",
+    "shares_unlock": "Cantidad de participaciones a desbloquear",
+    "remove": "Eliminar configuración",
+    "confirm": "Confirmar",
+    "passphrase": "Frase de contraseña",
+    "keyfile": "Archivo de clave",
+    "clear": "Borrar archivo de clave",
+    "continue": "Continuar",
+    "download_locations": "Ubicaciones de descarga",
+    "done": "Atrás",
+    "test_path": "Probar ubicación",
+    "test": "Probar",
+    "test_configuration": "Probar configuración",
+    "share_instructions": "Por favor, almacene de forma segura cada una de las participaciones generadas. Su servidor necesitará recuperar al menos el número especificado de participaciones para desbloquear los discos.",
+    "not_shown_again": "Estas participaciones no se volverán a mostrar."
+}

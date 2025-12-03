@@ -1,0 +1,21 @@
+{
+    "yes": "Ja",
+    "no": "Nej",
+    "apply": "Tillämpa",
+    "initialize": "Initiera",
+    "shares_total": "Antal andelar att generera",
+    "shares_unlock": "Antal andelar att låsa upp",
+    "remove": "Ta bort konfiguration",
+    "confirm": "Bekräfta",
+    "passphrase": "Lösenfras",
+    "keyfile": "Nyckelfil",
+    "clear": "Rensa nyckelfil",
+    "continue": "Fortsätt",
+    "download_locations": "Nedladdningsplatser",
+    "done": "Klar",
+    "test_path": "Testa plats",
+    "test": "Testa",
+    "test_configuration": "Testkonfiguration",
+    "share_instructions": "Spara varje genererad andel på ett säkert sätt. Din server måste kunna hämta minst det angivna antalet andelar för att låsa upp diskarna.",
+    "not_shown_again": "Dessa andelar kommer inte att visas igen."
+}

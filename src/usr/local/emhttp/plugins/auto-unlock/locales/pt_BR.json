@@ -1,0 +1,21 @@
+{
+    "yes": "Sim",
+    "no": "Não",
+    "apply": "Aplicar",
+    "initialize": "Inicializar",
+    "shares_total": "Número de Cotas para Gerar",
+    "shares_unlock": "Número de Cotas para Desbloquear",
+    "remove": "Remover Configuração",
+    "confirm": "Confirmar",
+    "passphrase": "Frase-secreta",
+    "keyfile": "Arquivo de chave",
+    "clear": "Limpar arquivo de chave",
+    "continue": "Continuar",
+    "download_locations": "Locais de download",
+    "done": "Concluído",
+    "test_path": "Testar local",
+    "test": "Testar",
+    "test_configuration": "Testar configuração",
+    "share_instructions": "Armazene com segurança cada uma das partes geradas. Seu servidor precisará recuperar pelo menos o número especificado de partes para desbloquear os discos.",
+    "not_shown_again": "Essas partes não serão exibidas novamente."
+}

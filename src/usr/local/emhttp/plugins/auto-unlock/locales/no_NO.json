@@ -1,0 +1,21 @@
+{
+    "yes": "Ja",
+    "no": "Nei",
+    "apply": "Bruk",
+    "initialize": "Initialiser",
+    "shares_total": "Antall andeler som skal genereres",
+    "shares_unlock": "Antall andeler som skal låses opp",
+    "remove": "Fjern konfigurasjon",
+    "confirm": "Bekreft",
+    "passphrase": "Passfrase",
+    "keyfile": "Nøkkelfil",
+    "clear": "Fjern nøkkelfil",
+    "continue": "Fortsett",
+    "download_locations": "Nedlastingssteder",
+    "done": "Ferdig",
+    "test_path": "Test plassering",
+    "test": "Test",
+    "test_configuration": "Testkonfigurasjon",
+    "share_instructions": "Vennligst lagre hver av de genererte delene på en sikker måte. Serveren din må kunne hente minst det angitte antallet deler for å låse opp diskene.",
+    "not_shown_again": "Disse delene vil ikke vises igjen."
+}

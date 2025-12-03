@@ -1,0 +1,21 @@
+{
+    "yes": "Oui",
+    "no": "Non",
+    "apply": "Appliquer",
+    "initialize": "Initialiser",
+    "shares_total": "Nombre de parts à générer",
+    "shares_unlock": "Nombre de parts à déverrouiller",
+    "remove": "Supprimer la configuration",
+    "confirm": "Confirmer",
+    "passphrase": "Phrase secrète",
+    "keyfile": "Fichier de clé",
+    "clear": "Effacer le fichier de clé",
+    "continue": "Continuer",
+    "download_locations": "Emplacements de téléchargement",
+    "done": "Terminé",
+    "test_path": "Tester l'emplacement",
+    "test": "Tester",
+    "test_configuration": "Tester la configuration",
+    "share_instructions": "Veuillez stocker en toute sécurité chacune des parts générées. Votre serveur devra pouvoir récupérer au moins le nombre spécifié de parts pour déverrouiller les disques.",
+    "not_shown_again": "Ces parts ne seront plus affichées."
+}

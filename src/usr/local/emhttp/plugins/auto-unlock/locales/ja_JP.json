@@ -1,0 +1,21 @@
+{
+    "yes": "はい",
+    "no": "いいえ",
+    "apply": "適用",
+    "initialize": "初期化",
+    "shares_total": "生成する共有数",
+    "shares_unlock": "ロック解除する共有数",
+    "remove": "設定を削除",
+    "confirm": "確認",
+    "passphrase": "パスフレーズ",
+    "keyfile": "キー ファイル",
+    "clear": "キー ファイルをクリア",
+    "continue": "続行",
+    "download_locations": "ダウンロード先",
+    "done": "完了",
+    "test_path": "ロケーションをテスト",
+    "test": "テスト",
+    "test_configuration": "設定をテスト",
+    "share_instructions": "生成された各共有情報は安全な場所に保管してください。サーバーはディスクを解除するために指定された数の共有情報を取得できる必要があります。",
+    "not_shown_again": "これらの共有情報は再表示されません。"
+}
