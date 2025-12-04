@@ -46,6 +46,12 @@ func main() {
 		})
 	}
 
+	// File to enable debug mode for testing/startup
+	_, err = os.Stat("/boot/config/plugins/auto-unlock/debug")
+	if err == nil {
+		args.Debug = true
+	}
+
 	if args.Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		log.Debug().Msg("Debug logging enabled")
