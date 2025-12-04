@@ -1,4 +1,4 @@
-package main
+package state
 
 import (
 	"encoding/json"
@@ -18,11 +18,16 @@ type State struct {
 	Threshold       uint16 `json:"threshold"`
 }
 
-func WriteStateToFile(secret SharedSecret, stateFile string, threshold uint16) error {
+func WriteStateToFile(
+	verificationKey []byte,
+	signingKey []byte,
+	stateFile string,
+	threshold uint16,
+) error {
 	// Write the verification key, signing key, and threshold to the state file as JSON
 	state := State{
-		VerificationKey: secret.VerificationKey,
-		SigningKey:      secret.SigningKey,
+		VerificationKey: verificationKey,
+		SigningKey:      signingKey,
 		Threshold:       threshold,
 	}
 

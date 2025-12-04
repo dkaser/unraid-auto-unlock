@@ -1,4 +1,4 @@
-package main
+package unraid
 
 import (
 	"encoding/json"
@@ -31,15 +31,15 @@ func IsUnraid() bool {
 	return err == nil
 }
 
-func TestKeyfile() error {
-	log.Info().Str("keyfile", args.KeyFile).Msg("Verifying that key can unlock disks")
+func TestKeyfile(keyfile string) error {
+	log.Info().Str("keyfile", keyfile).Msg("Verifying that key can unlock disks")
 
-	_, err := os.Stat(args.KeyFile)
+	_, err := os.Stat(keyfile)
 	if err != nil {
 		return fmt.Errorf("keyfile not found: %w", err)
 	}
 
-	log.Debug().Str("keyfile", args.KeyFile).Msg("Keyfile exists")
+	log.Debug().Str("keyfile", keyfile).Msg("Keyfile exists")
 
 	out, err := exec.Command("/bin/lsblk", "-Jpo", "NAME,FSTYPE", "-Q", "FSTYPE=='crypto_LUKS'").
 		Output()
@@ -67,7 +67,7 @@ func TestKeyfile() error {
 			"luksOpen",
 			"--test-passphrase",
 			"--key-file",
-			args.KeyFile,
+			keyfile,
 			device.Name,
 		)
 
