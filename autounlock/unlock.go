@@ -68,7 +68,13 @@ func retrieveSecret(state state.State) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read paths from config file: %w", err)
 	}
 
-	shares, err := secrets.GetShares(sharePaths, state, args.RetryDelay, args.Test)
+	shares, err := secrets.GetShares(
+		sharePaths,
+		state,
+		args.RetryDelay,
+		args.ServerTimeout,
+		args.Test,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get shares: %w", err)
 	}

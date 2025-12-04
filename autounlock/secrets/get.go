@@ -141,8 +141,12 @@ func tryGetShare(
 	signingKey []byte,
 	triedPaths map[string]bool,
 	seenShares map[string]bool,
+	serverTimeout time.Duration,
 ) (RetrievedShare, error) {
-	shareStr, err := FetchShare(context.Background(), path)
+	ctx, cancel := context.WithTimeout(context.Background(), serverTimeout)
+	defer cancel()
+
+	shareStr, err := FetchShare(ctx, path)
 	if err != nil {
 		log.Debug().Int("path", pathNum).Stack().Err(err).Msg("Failed to fetch share")
 
@@ -178,6 +182,7 @@ func collectShares(
 	paths []string,
 	state state.State,
 	retryDuration time.Duration,
+	serverTimeout time.Duration,
 	test bool,
 ) ([]*keys.KeyShare, error) {
 	var shares []*keys.KeyShare
@@ -202,6 +207,7 @@ func collectShares(
 				state.SigningKey,
 				triedPaths,
 				seenShares,
+				serverTimeout,
 			)
 			if err != nil {
 				continue
@@ -236,13 +242,15 @@ func GetShares(
 	paths []string,
 	state state.State,
 	retryInterval uint16,
+	serverTimeout uint16,
 	test bool,
 ) ([]*keys.KeyShare, error) {
 	retryDuration := time.Duration(retryInterval) * time.Second
+	serverTimeoutDuration := time.Duration(serverTimeout) * time.Second
 
 	logSharePaths(paths)
 
-	shares, err := collectShares(paths, state, retryDuration, test)
+	shares, err := collectShares(paths, state, retryDuration, serverTimeoutDuration, test)
 	if err != nil {
 		return nil, err
 	}

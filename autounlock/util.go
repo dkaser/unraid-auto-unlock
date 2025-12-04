@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
@@ -70,19 +71,25 @@ func RemoveKeyfile() {
 }
 
 func TestPath() error {
-	shareStr, err := secrets.FetchShare(context.Background(), args.TestPath)
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Duration(args.ServerTimeout)*time.Second,
+	)
+	defer cancel()
+
+	shareStr, err := secrets.FetchShare(ctx, args.TestPath)
 	if err != nil {
 		return fmt.Errorf("failed to fetch share: %w", err)
 	}
 
 	log.Info().Msg("Retrieved share from remote server")
 
-	state, err := state.ReadStateFromFile(args.State)
+	appState, err := state.ReadStateFromFile(args.State)
 	if err != nil {
 		return fmt.Errorf("failed to read state from file: %w", err)
 	}
 
-	_, err = secrets.GetShare(shareStr, state.SigningKey)
+	_, err = secrets.GetShare(shareStr, appState.SigningKey)
 	if err != nil {
 		return fmt.Errorf("failed to decode/verify share: %w", err)
 	}
