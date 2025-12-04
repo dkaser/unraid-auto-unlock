@@ -1,4 +1,4 @@
-package main
+package secrets
 
 import (
 	"encoding/base64"
@@ -22,12 +22,13 @@ func CreateSecret(threshold uint16, shares uint16) (SharedSecret, error) {
 	// Then, split the secret into shares using the specified threshold and number of shares.
 	curve := ecc.Ristretto255Sha512
 	secretKey := curve.NewScalar().Random()
-	shareVals, err := secretsharing.Shard(curve, secretKey, threshold, shares)
-	secret.Secret = secretKey.Encode()
 
+	shareVals, err := secretsharing.Shard(curve, secretKey, threshold, shares)
 	if err != nil {
 		return SharedSecret{}, fmt.Errorf("failed to split secret: %w", err)
 	}
+
+	secret.Secret = secretKey.Encode()
 
 	// Save the verification key from the first share (they all have the same verification key).
 	secret.VerificationKey = shareVals[0].VerificationKey.Encode()
@@ -72,10 +73,9 @@ func GetShare(shareStr string, signingKey []byte) (*keys.KeyShare, error) {
 		return nil, fmt.Errorf("failed to verify share: %w", err)
 	}
 
-	shareBytes := decodedShare
 	keyShare := &keys.KeyShare{}
 
-	err = keyShare.Decode(shareBytes)
+	err = keyShare.Decode(decodedShare)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode share: %w", err)
 	}

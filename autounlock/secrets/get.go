@@ -1,4 +1,4 @@
-package main
+package secrets
 
 import (
 	"bufio"
@@ -13,10 +13,17 @@ import (
 	"time"
 
 	"github.com/bytemare/secret-sharing/keys"
-	_ "github.com/rclone/rclone/backend/all"
+	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
+	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
+	_ "github.com/rclone/rclone/backend/all" // Import all rclone backends
 	"github.com/rclone/rclone/fs"
 	"github.com/rs/zerolog/log"
 )
+
+type RetrievedShare struct {
+	Share   *keys.KeyShare
+	ShareID string
+}
 
 func FetchShare(ctx context.Context, path string) (string, error) {
 	// Check for DNS protocol
@@ -98,7 +105,7 @@ func splitLocalPath(path string) (string, string) {
 	return path[:idx], path[idx+1:]
 }
 
-func readPathsFromFile(filename string) ([]string, error) {
+func ReadPathsFromFile(filename string) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open paths file: %w", err)
@@ -128,10 +135,54 @@ func readPathsFromFile(filename string) ([]string, error) {
 	return paths, nil
 }
 
-func GetShares(
+func tryGetShare(
+	path string,
+	pathNum int,
+	signingKey []byte,
+	triedPaths map[string]bool,
+	seenShares map[string]bool,
+	serverTimeout time.Duration,
+) (RetrievedShare, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), serverTimeout)
+	defer cancel()
+
+	shareStr, err := FetchShare(ctx, path)
+	if err != nil {
+		log.Debug().Int("path", pathNum).Stack().Err(err).Msg("Failed to fetch share")
+
+		return RetrievedShare{}, err
+	}
+
+	triedPaths[path] = true
+
+	share, err := GetShare(shareStr, signingKey)
+	if err != nil {
+		log.Debug().Int("path", pathNum).Stack().Err(err).Msg("Failed to get share")
+
+		return RetrievedShare{}, err
+	}
+
+	// Use share identifier to detect duplicates
+	shareID := strconv.FormatUint(uint64(share.Identifier()), 10)
+	if seenShares[shareID] {
+		log.Debug().Int("path", pathNum).Msg("Duplicate share, ignoring")
+
+		return RetrievedShare{}, errors.New("duplicate share")
+	}
+
+	log.Info().Int("path", pathNum).Msg("Successfully retrieved share")
+
+	return RetrievedShare{
+		Share:   share,
+		ShareID: shareID,
+	}, nil
+}
+
+func collectShares(
 	paths []string,
-	state State,
-	retryInterval uint16,
+	appState state.State,
+	retryDuration time.Duration,
+	serverTimeout time.Duration,
 	test bool,
 ) ([]*keys.KeyShare, error) {
 	var shares []*keys.KeyShare
@@ -139,14 +190,8 @@ func GetShares(
 	triedPaths := make(map[string]bool)
 	seenShares := make(map[string]bool)
 
-	retryDuration := time.Duration(retryInterval) * time.Second
-
-	for i, path := range paths {
-		log.Debug().Int("path", i).Str("target", path).Msg("Configured share path")
-	}
-
 	for {
-		if (!VerifyArrayStatus("Stopped")) && !test {
+		if shouldAbort(test) {
 			return nil, errors.New("array is no longer stopped, aborting share retrieval")
 		}
 
@@ -156,38 +201,22 @@ func GetShares(
 				continue
 			}
 
-			shareStr, err := FetchShare(context.Background(), path)
+			retrievedShare, err := tryGetShare(
+				path,
+				pathNum,
+				appState.SigningKey,
+				triedPaths,
+				seenShares,
+				serverTimeout,
+			)
 			if err != nil {
-				log.Debug().Int("path", pathNum).Stack().Err(err).Msg("Failed to fetch share")
-
 				continue
 			}
 
-			// Mark path as tried after successful fetch
-			triedPaths[path] = true
+			shares = append(shares, retrievedShare.Share)
+			seenShares[retrievedShare.ShareID] = true
 
-			share, err := GetShare(shareStr, state.SigningKey)
-			if err != nil {
-				log.Debug().Int("path", pathNum).Stack().Err(err).Msg("Failed to get share")
-
-				continue
-			}
-
-			// Use share identifier to detect duplicates
-			shareID := strconv.FormatUint(uint64(share.Identifier()), 10)
-			if seenShares[shareID] {
-				log.Debug().Int("path", pathNum).Msg("Duplicate share, ignoring")
-
-				continue
-			}
-
-			seenShares[shareID] = true
-
-			log.Info().Int("path", pathNum).Msg("Successfully retrieved share")
-
-			shares = append(shares, share)
-
-			if len(shares) >= int(state.Threshold) && !test {
+			if len(shares) >= int(appState.Threshold) && !test {
 				return shares, nil
 			}
 		}
@@ -200,19 +229,49 @@ func GetShares(
 		// Wait before retrying remaining paths
 		log.Warn().
 			Int("have", len(shares)).
-			Int("need", int(state.Threshold)).
+			Int("need", int(appState.Threshold)).
 			Dur("wait", retryDuration).
 			Msg("Not enough shares retrieved. Waiting before retrying.")
 		time.Sleep(retryDuration)
 	}
 
-	if len(shares) >= int(state.Threshold) {
+	return shares, nil
+}
+
+func GetShares(
+	paths []string,
+	appState state.State,
+	retryInterval uint16,
+	serverTimeout uint16,
+	test bool,
+) ([]*keys.KeyShare, error) {
+	retryDuration := time.Duration(retryInterval) * time.Second
+	serverTimeoutDuration := time.Duration(serverTimeout) * time.Second
+
+	logSharePaths(paths)
+
+	shares, err := collectShares(paths, appState, retryDuration, serverTimeoutDuration, test)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(shares) >= int(appState.Threshold) {
 		return shares, nil
 	}
 
 	return nil, fmt.Errorf(
 		"tried all paths, could not retrieve enough valid shares: have %d, need %d",
 		len(shares),
-		state.Threshold,
+		appState.Threshold,
 	)
+}
+
+func logSharePaths(paths []string) {
+	for i, path := range paths {
+		log.Debug().Int("path", i).Str("target", path).Msg("Configured share path")
+	}
+}
+
+func shouldAbort(test bool) bool {
+	return (!unraid.VerifyArrayStatus("Stopped")) && !test
 }

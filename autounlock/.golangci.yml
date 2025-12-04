@@ -3,7 +3,6 @@ linters:
   default: all
   disable:
     - wsl # Superseded by wsl_v5
-    - cyclop
     - depguard
     - err113
     - exhaustruct
@@ -11,7 +10,6 @@ linters:
     - gochecknoglobals
     - noctx
     - lll
-    - funlen
   exclusions:
     presets:
       - comments
