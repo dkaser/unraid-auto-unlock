@@ -180,7 +180,7 @@ func tryGetShare(
 
 func collectShares(
 	paths []string,
-	state state.State,
+	appState state.State,
 	retryDuration time.Duration,
 	serverTimeout time.Duration,
 	test bool,
@@ -204,7 +204,7 @@ func collectShares(
 			retrievedShare, err := tryGetShare(
 				path,
 				pathNum,
-				state.SigningKey,
+				appState.SigningKey,
 				triedPaths,
 				seenShares,
 				serverTimeout,
@@ -216,7 +216,7 @@ func collectShares(
 			shares = append(shares, retrievedShare.Share)
 			seenShares[retrievedShare.ShareID] = true
 
-			if len(shares) >= int(state.Threshold) && !test {
+			if len(shares) >= int(appState.Threshold) && !test {
 				return shares, nil
 			}
 		}
@@ -229,7 +229,7 @@ func collectShares(
 		// Wait before retrying remaining paths
 		log.Warn().
 			Int("have", len(shares)).
-			Int("need", int(state.Threshold)).
+			Int("need", int(appState.Threshold)).
 			Dur("wait", retryDuration).
 			Msg("Not enough shares retrieved. Waiting before retrying.")
 		time.Sleep(retryDuration)
@@ -240,7 +240,7 @@ func collectShares(
 
 func GetShares(
 	paths []string,
-	state state.State,
+	appState state.State,
 	retryInterval uint16,
 	serverTimeout uint16,
 	test bool,
@@ -250,19 +250,19 @@ func GetShares(
 
 	logSharePaths(paths)
 
-	shares, err := collectShares(paths, state, retryDuration, serverTimeoutDuration, test)
+	shares, err := collectShares(paths, appState, retryDuration, serverTimeoutDuration, test)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(shares) >= int(state.Threshold) {
+	if len(shares) >= int(appState.Threshold) {
 		return shares, nil
 	}
 
 	return nil, fmt.Errorf(
 		"tried all paths, could not retrieve enough valid shares: have %d, need %d",
 		len(shares),
-		state.Threshold,
+		appState.Threshold,
 	)
 }
 
