@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/alexflint/go-arg"
+	"github.com/dkaser/unraid-auto-unlock/autounlock/version"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/term"
@@ -26,6 +27,7 @@ var args struct {
 	RetryDelay    uint16 `arg:"--retry-delay"   default:"60"                                          help:"Delay between retries in seconds"`
 	Debug         bool   `arg:"--debug"         help:"Enable debug logging"`
 	Pretty        bool   `arg:"--pretty"        help:"Enable pretty logging output"`
+	Version       bool   `arg:"--version"       help:"Show version information"`
 }
 
 func main() {
@@ -56,6 +58,14 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		log.Debug().Msg("Debug logging enabled")
 	}
+
+	if args.Version {
+		fmt.Print(version.BuildInfoString())
+
+		return
+	}
+
+	version.OutputToDebug()
 
 	if !IsUnraid() {
 		log.Error().Msg("This program can only be run on Unraid OS")
