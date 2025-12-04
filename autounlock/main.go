@@ -59,6 +59,14 @@ func main() {
 		log.Debug().Msg("Debug logging enabled")
 	}
 
+	if args.Version {
+		fmt.Print(version.BuildInfoString())
+
+		return
+	}
+
+	version.OutputToDebug()
+
 	if !IsUnraid() {
 		log.Error().Msg("This program can only be run on Unraid OS")
 		os.Exit(1)
@@ -75,8 +83,6 @@ func main() {
 		err = Setup()
 	case args.TestPath != "":
 		err = TestPath()
-	case args.Version:
-		fmt.Print(version.BuildInfoString())
 	default:
 		err = Unlock()
 	}

@@ -3,6 +3,8 @@ package version
 import (
 	"fmt"
 	"runtime/debug"
+
+	"github.com/rs/zerolog/log"
 )
 
 var Tag = "unknown"
@@ -10,7 +12,7 @@ var Tag = "unknown"
 type BuildInfo struct {
 	Tag      string
 	Revision string
-	GitDirty bool
+	GitDirty *bool
 }
 
 // GetBuildInfo returns the current build information.
@@ -18,7 +20,7 @@ func GetBuildInfo() BuildInfo {
 	buildInfo := BuildInfo{
 		Tag:      Tag,
 		Revision: "unknown",
-		GitDirty: true,
+		GitDirty: nil,
 	}
 
 	if info, ok := debug.ReadBuildInfo(); ok {
@@ -27,7 +29,8 @@ func GetBuildInfo() BuildInfo {
 			case "vcs.revision":
 				buildInfo.Revision = setting.Value
 			case "vcs.modified":
-				buildInfo.GitDirty = setting.Value == "true"
+				val := setting.Value == "true"
+				buildInfo.GitDirty = &val
 			}
 		}
 	}
@@ -41,9 +44,29 @@ func BuildInfoString() string {
 	retval := fmt.Sprintf("Tag: %s\n", info.Tag)
 	retval += fmt.Sprintf("Revision: %s\n", info.Revision)
 
-	if info.GitDirty {
-		retval += fmt.Sprintf("Git Dirty: %t\n", info.GitDirty)
+	if info.GitDirty == nil {
+		retval += "Git Dirty: Unknown\n"
+	} else if *info.GitDirty {
+		retval += "Git Dirty: Yes\n"
 	}
 
 	return retval
+}
+
+func OutputToDebug() {
+	info := GetBuildInfo()
+
+	dirty := "no"
+
+	if info.GitDirty == nil {
+		dirty = "unknown"
+	} else if *info.GitDirty {
+		dirty = "yes"
+	}
+
+	log.Debug().
+		Str("tag", info.Tag).
+		Str("revision", info.Revision).
+		Str("git_dirty", dirty).
+		Msg("Build information")
 }
