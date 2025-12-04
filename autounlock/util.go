@@ -52,9 +52,18 @@ func Prechecks() error {
 }
 
 func RemoveKeyfile() {
+	// Remove keyfile
 	err := os.Remove(args.KeyFile)
+	if errors.Is(err, os.ErrNotExist) {
+		log.Debug().Str("keyfile", args.KeyFile).Msg("Keyfile already removed")
+
+		return
+	}
+
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Failed to remove keyfile")
+
+		return
 	}
 
 	log.Info().Str("keyfile", args.KeyFile).Msg("Removed keyfile")

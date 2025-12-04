@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
-	"os"
 
 	"github.com/dkaser/unraid-auto-unlock/autounlock/encryption"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets"
@@ -47,10 +46,7 @@ func Setup() error {
 		return fmt.Errorf("failed to encrypt file: %w", err)
 	}
 
-	err = os.Remove(args.KeyFile)
-	if err != nil {
-		log.Error().Stack().Err(err).Msg("Failed to remove key file")
-	}
+	RemoveKeyfile()
 
 	log.Info().
 		Str("keyfile", args.KeyFile).
