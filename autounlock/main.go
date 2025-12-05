@@ -7,6 +7,7 @@ import (
 	"github.com/alexflint/go-arg"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/version"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 )
 
 var args struct {
@@ -27,6 +28,8 @@ var args struct {
 }
 
 func main() {
+	fs := afero.NewOsFs()
+
 	err := arg.Parse(&args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse arguments: %v\n", err)
@@ -43,7 +46,7 @@ func main() {
 
 	version.OutputToDebug()
 
-	err = Prechecks()
+	err = Prechecks(fs)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Prechecks failed")
 		os.Exit(1)
@@ -51,11 +54,11 @@ func main() {
 
 	switch {
 	case args.Setup:
-		err = Setup()
+		err = Setup(fs)
 	case args.TestPath != "":
-		err = TestPath()
+		err = TestPath(fs)
 	default:
-		err = Unlock()
+		err = Unlock(fs)
 	}
 
 	if err != nil {

@@ -3,8 +3,9 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
+
+	"github.com/spf13/afero"
 )
 
 const (
@@ -19,6 +20,7 @@ type State struct {
 }
 
 func WriteStateToFile(
+	fs afero.Fs,
 	verificationKey []byte,
 	signingKey []byte,
 	stateFile string,
@@ -38,13 +40,13 @@ func WriteStateToFile(
 	}
 
 	// Ensure the directory for the state file exists
-	err = os.MkdirAll(filepath.Dir(stateFile), stateDirMode)
+	err = fs.MkdirAll(filepath.Dir(stateFile), stateDirMode)
 	if err != nil {
 		return fmt.Errorf("failed to create directory for state file: %w", err)
 	}
 
 	// Write the JSON data to the state file
-	err = os.WriteFile(stateFile, data, stateFileMode)
+	err = afero.WriteFile(fs, stateFile, data, stateFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write state file: %w", err)
 	}
@@ -52,11 +54,11 @@ func WriteStateToFile(
 	return nil
 }
 
-func ReadStateFromFile(stateFile string) (State, error) {
+func ReadStateFromFile(fs afero.Fs, stateFile string) (State, error) {
 	var state State
 
 	// Read the JSON data from the state file
-	data, err := os.ReadFile(stateFile)
+	data, err := afero.ReadFile(fs, stateFile)
 	if err != nil {
 		return state, fmt.Errorf("failed to read state file: %w", err)
 	}

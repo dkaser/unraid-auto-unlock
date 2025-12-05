@@ -4,7 +4,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
-	"os"
+
+	"github.com/spf13/afero"
 )
 
 const (
@@ -24,8 +25,8 @@ func trimKey(key []byte, length int) ([]byte, error) {
 	return key[:length], nil
 }
 
-func EncryptFile(inputPath string, outputPath string, key []byte, nonce []byte) error {
-	fileBytes, err := os.ReadFile(inputPath)
+func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, nonce []byte) error {
+	fileBytes, err := afero.ReadFile(fs, inputPath)
 	if err != nil {
 		return fmt.Errorf("failed to read input file: %w", err)
 	}
@@ -52,7 +53,7 @@ func EncryptFile(inputPath string, outputPath string, key []byte, nonce []byte) 
 
 	ciphertext := gcm.Seal(nil, nonce, fileBytes, nil)
 
-	err = os.WriteFile(outputPath, ciphertext, encryptionFileMode)
+	err = afero.WriteFile(fs, outputPath, ciphertext, encryptionFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}
@@ -60,8 +61,8 @@ func EncryptFile(inputPath string, outputPath string, key []byte, nonce []byte) 
 	return nil
 }
 
-func DecryptFile(inputPath string, outputPath string, key []byte, nonce []byte) error {
-	ciphertext, err := os.ReadFile(inputPath)
+func DecryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, nonce []byte) error {
+	ciphertext, err := afero.ReadFile(fs, inputPath)
 	if err != nil {
 		return fmt.Errorf("failed to read input file: %w", err)
 	}
@@ -91,7 +92,7 @@ func DecryptFile(inputPath string, outputPath string, key []byte, nonce []byte) 
 		return fmt.Errorf("failed to decrypt file: %w", err)
 	}
 
-	err = os.WriteFile(outputPath, plaintext, encryptionFileMode)
+	err = afero.WriteFile(fs, outputPath, plaintext, encryptionFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}

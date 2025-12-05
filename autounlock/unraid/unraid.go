@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"gopkg.in/ini.v1"
 )
 
@@ -25,8 +26,8 @@ type BlockDevices struct {
 	} `json:"blockdevices"`
 }
 
-func IsUnraid() bool {
-	_, err := os.Stat("/etc/unraid-version")
+func IsUnraid(fs afero.Fs) bool {
+	_, err := fs.Stat("/etc/unraid-version")
 
 	return err == nil
 }
@@ -90,13 +91,13 @@ func TestKeyfile(keyfile string) error {
 	return errors.New("keyfile could not decrypt any LUKS devices")
 }
 
-func WaitForVarIni() error {
+func WaitForVarIni(fs afero.Fs) error {
 	deadline := time.Now().Add(arrayTimeout)
 
 	for {
-		_, err := os.Stat("/var/local/emhttp/var.ini")
+		_, err := fs.Stat("/var/local/emhttp/var.ini")
 		if err == nil {
-			fsState, err := GetFsState()
+			fsState, err := GetFsState(fs)
 			if err == nil && fsState != "" {
 				log.Debug().Str("fsState", fsState).Msg("var.ini found and readable")
 
@@ -115,8 +116,14 @@ func WaitForVarIni() error {
 	}
 }
 
-func GetFsState() (string, error) {
-	cfg, err := ini.Load("/var/local/emhttp/var.ini")
+func GetFsState(fs afero.Fs) (string, error) {
+	file, err := fs.Open("/var/local/emhttp/var.ini")
+	if err != nil {
+		return "", fmt.Errorf("failed to open var.ini: %w", err)
+	}
+	defer file.Close()
+
+	cfg, err := ini.Load(file)
 	if err != nil {
 		return "", fmt.Errorf("failed to read var.ini: %w", err)
 	}
@@ -127,8 +134,8 @@ func GetFsState() (string, error) {
 	return fsState, nil
 }
 
-func VerifyArrayStatus(status string) bool {
-	fsState, err := GetFsState()
+func VerifyArrayStatus(fs afero.Fs, status string) bool {
+	fsState, err := GetFsState(fs)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Failed to get fsState")
 
@@ -138,13 +145,13 @@ func VerifyArrayStatus(status string) bool {
 	return strings.EqualFold(fsState, status)
 }
 
-func StartArray() error {
+func StartArray(fs afero.Fs) error {
 	_, err := os.Stat("/root/keyfile")
 	if err != nil {
 		return fmt.Errorf("keyfile not found: %w", err)
 	}
 
-	if !VerifyArrayStatus("Stopped") {
+	if !VerifyArrayStatus(fs, "Stopped") {
 		return errors.New("array is not stopped")
 	}
 
@@ -165,11 +172,11 @@ func StartArray() error {
 	return nil
 }
 
-func WaitForArrayStarted() error {
+func WaitForArrayStarted(fs afero.Fs) error {
 	deadline := time.Now().Add(arrayTimeout)
 
 	for {
-		if VerifyArrayStatus("Started") {
+		if VerifyArrayStatus(fs, "Started") {
 			log.Debug().Msg("Array has started")
 
 			return nil

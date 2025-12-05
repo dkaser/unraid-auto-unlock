@@ -16,6 +16,11 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
+  settings:
+    varnamelen:
+      ignore-decls:
+        - fs afero.Fs
+
 formatters:
   enable:
     - gci

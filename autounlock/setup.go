@@ -9,9 +9,10 @@ import (
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 )
 
-func Setup() error {
+func Setup(fs afero.Fs) error {
 	err := unraid.TestKeyfile(args.KeyFile)
 	if err != nil {
 		return fmt.Errorf("keyfile test failed: %w", err)
@@ -25,6 +26,7 @@ func Setup() error {
 	}
 
 	err = state.WriteStateToFile(
+		fs,
 		secret.VerificationKey,
 		secret.SigningKey,
 		args.State,
@@ -37,6 +39,7 @@ func Setup() error {
 	log.Info().Str("state", args.State).Msg("Wrote state")
 
 	err = encryption.EncryptFile(
+		fs,
 		args.KeyFile,
 		args.EncryptedFile,
 		secret.Secret,
@@ -46,7 +49,7 @@ func Setup() error {
 		return fmt.Errorf("failed to encrypt file: %w", err)
 	}
 
-	RemoveKeyfile()
+	RemoveKeyfile(fs)
 
 	log.Info().
 		Str("keyfile", args.KeyFile).
