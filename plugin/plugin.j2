@@ -48,7 +48,7 @@ rm -f /var/log/plugins/{{ name }}-preview.plg
 
 {% if env['PLUGIN_RELEASE'] != '' -%}
 # Update plugin name for non-main branches
-sed -i "s/Automatic Disk Unlock/Automatic Disk Unlock (Preview)/" {{ pluginDirectory }}/README.md
+sed -i "s/Automatic Disk Unlock/Automatic Disk Unlock (Preview)/" /usr/local/emhttp/plugins/{{ name }}/README.md
 {% endif %}
 
 echo ""
