@@ -12,6 +12,7 @@ import (
 	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"golang.org/x/term"
 )
 
@@ -39,12 +40,12 @@ func InitializeLogging() {
 	}
 }
 
-func Prechecks() error {
-	if !unraid.IsUnraid() {
+func Prechecks(fs afero.Fs) error {
+	if !unraid.IsUnraid(fs) {
 		return errors.New("not running on Unraid")
 	}
 
-	err := unraid.WaitForVarIni()
+	err := unraid.WaitForVarIni(fs)
 	if err != nil {
 		return fmt.Errorf("failed to wait for var.ini: %w", err)
 	}
@@ -52,10 +53,10 @@ func Prechecks() error {
 	return nil
 }
 
-func RemoveKeyfile() {
+func RemoveKeyfile(fs afero.Fs) {
 	// Remove keyfile
-	err := os.Remove(args.KeyFile)
-	if errors.Is(err, os.ErrNotExist) {
+	err := fs.Remove(args.KeyFile)
+	if errors.Is(err, afero.ErrFileNotFound) {
 		log.Debug().Str("keyfile", args.KeyFile).Msg("Keyfile already removed")
 
 		return
@@ -70,7 +71,7 @@ func RemoveKeyfile() {
 	log.Info().Str("keyfile", args.KeyFile).Msg("Removed keyfile")
 }
 
-func TestPath() error {
+func TestPath(fs afero.Fs) error {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
 		time.Duration(args.ServerTimeout)*time.Second,
@@ -84,7 +85,7 @@ func TestPath() error {
 
 	log.Info().Msg("Retrieved share from remote server")
 
-	appState, err := state.ReadStateFromFile(args.State)
+	appState, err := state.ReadStateFromFile(fs, args.State)
 	if err != nil {
 		return fmt.Errorf("failed to read state from file: %w", err)
 	}

@@ -9,29 +9,36 @@ import (
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 )
 
-func Unlock() error {
-	if !unraid.VerifyArrayStatus("Stopped") && !args.Test {
+func Unlock(fs afero.Fs) error {
+	if !unraid.VerifyArrayStatus(fs, "Stopped") && !args.Test {
 		return errors.New("array is not stopped, cannot unlock")
 	}
 
-	state, err := state.ReadStateFromFile(args.State)
+	state, err := state.ReadStateFromFile(fs, args.State)
 	if err != nil {
 		return fmt.Errorf("failed to read state from file: %w", err)
 	}
 
-	secret, err := retrieveSecret(state)
+	secret, err := retrieveSecret(fs, state)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve secret: %w", err)
 	}
 
-	err = encryption.DecryptFile(args.EncryptedFile, args.KeyFile, secret, state.VerificationKey)
+	err = encryption.DecryptFile(
+		fs,
+		args.EncryptedFile,
+		args.KeyFile,
+		secret,
+		state.VerificationKey,
+	)
 	if err != nil {
 		return fmt.Errorf("failed to decrypt file: %w", err)
 	}
 
-	defer RemoveKeyfile()
+	defer RemoveKeyfile(fs)
 
 	log.Info().
 		Str("encryptedfile", args.EncryptedFile).
@@ -49,12 +56,12 @@ func Unlock() error {
 		return nil
 	}
 
-	err = unraid.StartArray()
+	err = unraid.StartArray(fs)
 	if err != nil {
 		return fmt.Errorf("failed to start array: %w", err)
 	}
 
-	err = unraid.WaitForArrayStarted()
+	err = unraid.WaitForArrayStarted(fs)
 	if err != nil {
 		return fmt.Errorf("failed to verify array started: %w", err)
 	}
@@ -62,13 +69,14 @@ func Unlock() error {
 	return nil
 }
 
-func retrieveSecret(state state.State) ([]byte, error) {
-	sharePaths, err := secrets.ReadPathsFromFile(args.Config)
+func retrieveSecret(fs afero.Fs, state state.State) ([]byte, error) {
+	sharePaths, err := secrets.ReadPathsFromFile(fs, args.Config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read paths from config file: %w", err)
 	}
 
 	shares, err := secrets.GetShares(
+		fs,
 		sharePaths,
 		state,
 		args.RetryDelay,

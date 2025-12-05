@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +17,7 @@ import (
 	_ "github.com/rclone/rclone/backend/all" // Import all rclone backends
 	"github.com/rclone/rclone/fs"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 )
 
 type RetrievedShare struct {
@@ -105,8 +105,8 @@ func splitLocalPath(path string) (string, string) {
 	return path[:idx], path[idx+1:]
 }
 
-func ReadPathsFromFile(filename string) ([]string, error) {
-	file, err := os.Open(filename)
+func ReadPathsFromFile(fs afero.Fs, filename string) ([]string, error) {
+	file, err := fs.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open paths file: %w", err)
 	}
@@ -179,6 +179,7 @@ func tryGetShare(
 }
 
 func collectShares(
+	fs afero.Fs,
 	paths []string,
 	appState state.State,
 	retryDuration time.Duration,
@@ -191,7 +192,7 @@ func collectShares(
 	seenShares := make(map[string]bool)
 
 	for {
-		if shouldAbort(test) {
+		if shouldAbort(fs, test) {
 			return nil, errors.New("array is no longer stopped, aborting share retrieval")
 		}
 
@@ -239,6 +240,7 @@ func collectShares(
 }
 
 func GetShares(
+	fs afero.Fs,
 	paths []string,
 	appState state.State,
 	retryInterval uint16,
@@ -250,7 +252,7 @@ func GetShares(
 
 	logSharePaths(paths)
 
-	shares, err := collectShares(paths, appState, retryDuration, serverTimeoutDuration, test)
+	shares, err := collectShares(fs, paths, appState, retryDuration, serverTimeoutDuration, test)
 	if err != nil {
 		return nil, err
 	}
@@ -272,6 +274,6 @@ func logSharePaths(paths []string) {
 	}
 }
 
-func shouldAbort(test bool) bool {
-	return (!unraid.VerifyArrayStatus("Stopped")) && !test
+func shouldAbort(fs afero.Fs, test bool) bool {
+	return (!unraid.VerifyArrayStatus(fs, "Stopped")) && !test
 }
