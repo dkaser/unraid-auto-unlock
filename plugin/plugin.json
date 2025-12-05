@@ -4,6 +4,6 @@
     "author": "Derek Kaser",
     "min": "7.2.0",
     "icon": "unlock",
-    "support": "https://...",
+    "support": "https://forums.unraid.net/topic/195584-plugin-automatic-disk-unlock/",
     "launch": "Tools/Auto Unlock"
 }

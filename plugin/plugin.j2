@@ -37,6 +37,20 @@ upgradepkg --install-new /boot/config/plugins/{{ name }}/{{ package_name }}-{{ e
 # cleanup old versions
 rm -f $(ls /boot/config/plugins/{{ name }}/{{ package_name }}-*.txz 2>/dev/null | grep -v '{{ env['PLUGIN_VERSION'] }}')
 
+# remove other branch (if switching between main and preview)
+{% if env['PLUGIN_RELEASE'] != '' -%}
+rm -f /boot/config/plugins/{{ name }}.plg
+rm -f /var/log/plugins/{{ name }}.plg
+{% else %}
+rm -f /boot/config/plugins/{{ name }}-preview.plg
+rm -f /var/log/plugins/{{ name }}-preview.plg
+{% endif -%}
+
+{% if env['PLUGIN_RELEASE'] != '' -%}
+# Update plugin name for non-main branches
+sed -i "s/Automatic Disk Unlock/Automatic Disk Unlock (Preview)/" /usr/local/emhttp/plugins/{{ name }}/README.md
+{% endif %}
+
 echo ""
 echo "----------------------------------------------------"
 echo " {{ name }} has been installed."
