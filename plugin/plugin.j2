@@ -42,8 +42,8 @@ rm -f $(ls /boot/config/plugins/{{ name }}/{{ package_name }}-*.txz 2>/dev/null 
 rm -f /boot/config/plugins/{{ name }}.plg
 rm -f /var/log/plugins/{{ name }}.plg
 {% else %}
-rm -f /boot/config/plugins/{{ name }}{{ env['PLUGIN_RELEASE'] }}.plg
-rm -f /var/log/plugins/{{ name }}{{ env['PLUGIN_RELEASE'] }}.plg
+rm -f /boot/config/plugins/{{ name }}-preview.plg
+rm -f /var/log/plugins/{{ name }}-preview.plg
 {% endif -%}
 
 {% if env['PLUGIN_RELEASE'] != '' -%}
