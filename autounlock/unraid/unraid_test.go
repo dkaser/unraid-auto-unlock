@@ -12,7 +12,7 @@ import (
 // Testing objectives:
 // - Verify that IsUnraid correctly identifies an Unraid environment.
 // - Verify that IsUnraid returns false for non-Unraid environments.
-// - Verify that WaitForVarIni correctly waits for /boot/config/var.ini to be available.
+// - Verify that WaitForVarIni correctly waits for /var/local/emhttp/var.ini to be available.
 // - Verify that GetFsState correctly reads the fsState from var.ini.
 // - Verify that GetFsState returns an error if var.ini cannot be read or if fsState is not defined
 // - Verify that VerifyArrayStatus correctly checks the array status.
