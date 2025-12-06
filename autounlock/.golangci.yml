@@ -10,12 +10,20 @@ linters:
     - gochecknoglobals
     - noctx
     - lll
+    - testpackage
+    - paralleltest
   exclusions:
     presets:
       - comments
       - common-false-positives
       - legacy
       - std-error-handling
+    rules:
+      - path: _test\.go
+        linters:
+          - varnamelen
+          - errcheck
+          - goconst
   settings:
     varnamelen:
       ignore-decls:
