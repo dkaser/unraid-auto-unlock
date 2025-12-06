@@ -61,6 +61,16 @@ echo ""
 </INLINE>
 </FILE>
 
+<FILE Name="/boot/config/plugins/{{ name }}/.gitignore">
+<INLINE>
+<![CDATA[
+unlock.enc
+state.json
+config.txt
+]]>
+</INLINE>
+</FILE>
+
 <!--
 The 'unlock' script. This only runs if /var/local/emhttp/var.ini does not exist yet.
 -->
