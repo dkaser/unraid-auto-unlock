@@ -12,6 +12,7 @@ linters:
     - lll
     - testpackage
     - paralleltest
+    - tagalign # Provided by golines
   exclusions:
     presets:
       - comments
