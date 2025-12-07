@@ -226,6 +226,10 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 </script>
 
 <table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("download_locations"); ?></td></tr></thead></table>
+<p><?= $tr->tr("download_locations_instructions"); ?></p>
+<pre>
+<?php require PLUGIN_ROOT . "/sample-locations.txt"; ?>
+</pre>
 <form method="post" action="/update.php" target="progressFrame">
 	<input type="hidden" name="#include" value="/webGui/include/update.file.php">
 	<input type="hidden" name="#raw_file" value="true">

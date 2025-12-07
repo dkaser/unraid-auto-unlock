@@ -1,0 +1,6 @@
+:http,url='https://SERVER/FILE':
+:sftp,host=ADDRESS,user=USER,key_file=/path/to/.ssh/id_ed25519:/PATH/FILE
+:s3,provider=AWS,access_key_id=MYACCESSID,secret_access_key=MYSECRETKEY,region=REGION:BUCKET/FILE
+:smb,host=ADDRESS,user=USERNAME,pass=PASSWORD:SHARE/FILE
+  - NOTE: For SMB, PASSWORD must be obscured using rclone obscure
+dns:testkey.domain.tld

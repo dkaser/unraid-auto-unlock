@@ -90,10 +90,13 @@ flowchart TB
   - No single location stores the complete wrapping key needed to decrypt your disk encryption key
   - Pieces are displayed once during setup as base64 strings—store them securely in accessible locations
   - If pieces are lost, a new set must be generated
-- **Flexible Retrieval Methods:** Supports most backends available in [rclone](https://rclone.org/docs/#connection-strings) for retrieving key pieces, and also in DNS TXT records. Examples:
-  - HTTP/HTTPS servers: `:http,url='https://server.my.ts.net:888/key2':`
-  - SSH/SFTP servers: `:sftp,host=server2.my.net,user=root,key_file=/config/.ssh/id_ed25519:/root/key3`
-  - DNS TXT records: `dns:testkey.domain.tld`
+- **Flexible Retrieval Methods:** Supports most backends available in [rclone](https://rclone.org/docs/#connection-strings) for retrieving key pieces, and also in DNS TXT records. Examples include:
+  - HTTP/HTTPS servers
+  - SFTP servers
+  - SMB shares
+  - Amazon S3 and compatible services
+  - DNS TXT records
+  - Sample configurations: [see here](src/usr/local/emhttp/plugins/auto-unlock/sample-locations.txt)
 - **Non-Invasive Security:** Protects your keyfile with the distributed wrapping key without modifying disk encryption headers or drive configuration.
 
 ## Configuration
