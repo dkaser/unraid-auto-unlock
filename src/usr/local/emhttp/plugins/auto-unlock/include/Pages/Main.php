@@ -198,7 +198,29 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
             document.getElementById('command_output').textContent = 'Error during path test: ' + error.message;
         }
         document.getElementById('continue_button').disabled = false;
-}
+    }
+
+    async function obscure() {
+        const obscureValue = document.getElementById('obscure_value').value;
+
+        const formData = new URLSearchParams({
+            'obscure_value': obscureValue,
+            'csrf_token': '<?= $csrfToken; ?>'
+        });
+
+        try {
+            const response = await fetch('/plugins/auto-unlock/action.php/obscure', {
+                method: 'POST',
+                body: formData,
+                signal: AbortSignal.timeout(10000)
+            });
+
+            const result = await response.text();
+            document.getElementById('obscure_output').textContent = result;
+        } catch (error) {
+            document.getElementById('obscure_output').textContent = 'Error during obscuring value: ' + error.message;
+        }
+    }
 
     async function testConfig() {
         const formData = new URLSearchParams({
@@ -262,6 +284,16 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
     <dt><?= $tr->tr("test_configuration"); ?></dt>
     <dd>
         <input type="button" id="test_config_button" name="test_config_button" value="<?= $tr->tr("test"); ?>" onclick="testConfig()" />
+    </dd>
+</dl>
+
+<table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("obscure_value"); ?></td></tr></thead></table>
+<dl>
+    <dt><?= $tr->tr("obscure_value"); ?></dt>
+    <dd>
+        <input type="password" id="obscure_value" name="obscure_value" value="" />
+        <input type="button" id="obscure_value_button" name="obscure_value_button" value="<?= $tr->tr("obscure"); ?>" onclick="obscure()" />
+        <span style="font-family: monospace;" id="obscure_output"></span>
     </dd>
 </dl>
 

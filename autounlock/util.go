@@ -10,11 +10,30 @@ import (
 	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
+	"github.com/rclone/rclone/fs/config/obscure"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"golang.org/x/term"
 )
+
+func ObscureSecretFromStdin() error {
+	var secret string
+
+	_, err := fmt.Scanln(&secret)
+	if err != nil {
+		return fmt.Errorf("failed to read secret from stdin: %w", err)
+	}
+
+	obscured, err := obscure.Obscure(secret)
+	if err != nil {
+		return fmt.Errorf("failed to obscure secret: %w", err)
+	}
+
+	fmt.Println(obscured)
+
+	return nil
+}
 
 func InitializeLogging() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
