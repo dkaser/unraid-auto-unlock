@@ -45,6 +45,32 @@ $app->post("{$prefix}/remove", function (Request $request, Response $response, $
         ->withStatus(303);
 });
 
+$app->post("{$prefix}/obscure", function (Request $request, Response $response, $args) {
+    $data       = (array) $request->getParsedBody();
+    $inputValue = isset($data['obscure_value']) ? (string) $data['obscure_value'] : '';
+
+    if (empty($inputValue)) {
+        $response->getBody()->write("Error: No input value provided.");
+        return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
+    }
+
+    $process = new Process([
+        '/usr/local/php/unraid-auto-unlock/bin/autounlock',
+        '--obscure'
+    ]);
+
+    $process->setInput($inputValue);
+    $process->run();
+
+    if ( ! $process->isSuccessful()) {
+        $response->getBody()->write("Error during obscuring process.");
+        return $response->withHeader('Content-Type', 'text/plain')->withStatus(500);
+    }
+    $obscuredValue = trim($process->getOutput());
+    $response->getBody()->write($obscuredValue);
+    return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+});
+
 $app->post("{$prefix}/initialize", function (Request $request, Response $response, $args) {
     $data = (array) $request->getParsedBody();
 

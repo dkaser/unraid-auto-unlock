@@ -18,5 +18,7 @@
     "test_configuration": "Test Configuration",
     "share_instructions": "Please securely store each of the generated shares. Your server will need to be able to retrieve at least the specified number of shares to unlock the disks.",
     "not_shown_again": "These shares will not be displayed again.",
+    "obscure": "Obscure",
+    "obscure_value": "Obscure Value",
     "download_locations_instructions": "Specify the locations from which the plugin should retrieve the key pieces during boot. Each location should be on its own line. Examples of supported formats can be found in the sample below:"
 }
