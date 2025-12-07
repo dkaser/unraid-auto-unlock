@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -18,12 +19,12 @@ import (
 )
 
 func ObscureSecretFromStdin() error {
-	var secret string
-
-	_, err := fmt.Scanln(&secret)
-	if err != nil {
-		return fmt.Errorf("failed to read secret from stdin: %w", err)
+	scanner := bufio.NewScanner(os.Stdin)
+	if !scanner.Scan() {
+		return fmt.Errorf("failed to read secret from stdin: %w", scanner.Err())
 	}
+
+	secret := scanner.Text()
 
 	obscured, err := obscure.Obscure(secret)
 	if err != nil {
