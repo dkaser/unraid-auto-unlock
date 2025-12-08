@@ -1,7 +1,9 @@
 {
-    "title": "Plugin Name",
+    "title": "Automatic Disk Unlock",
     "files": [
-        "/var/log/plugin-name*"
+        "/var/log/autounlock*",
+        "/var/log/auto-unlock*"
     ],
-    "system_diagnostics": true
+    "system_diagnostics": true,
+    "upload": "https://plugin-diagnostics.edacerton.win/"
 }
