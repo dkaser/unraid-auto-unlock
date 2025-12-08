@@ -59,7 +59,7 @@ func GenerateRandomKey(length int) ([]byte, error) {
 
 	_, err := rand.Read(key)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate signing key: %w", err)
+		return nil, fmt.Errorf("failed to generate random key: %w", err)
 	}
 
 	return key, nil

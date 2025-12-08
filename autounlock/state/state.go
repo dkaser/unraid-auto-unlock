@@ -28,7 +28,6 @@ func WriteStateToFile(
 	stateFile string,
 	threshold uint16,
 ) error {
-	// Write the verification key, signing key, and threshold to the state file as JSON
 	state := State{
 		VerificationKey: verificationKey,
 		SigningKey:      signingKey,
