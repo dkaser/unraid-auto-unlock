@@ -30,9 +30,6 @@ class Actions
 
     public static function Test(Request $request, Response $response): Response
     {
-        $output = array();
-        $retval = null;
-
         $process = new Process([
             self::BIN_PATH,
             'unlock',
@@ -122,10 +119,12 @@ class Actions
             $response->getBody()->write("Error: Unable to write temporary keyfile.");
             return $response->withHeader('Content-Type', 'text/plain')->withStatus(500);
         }
-        @chmod('/root/keyfile', 0600);
+        if ( ! chmod('/root/keyfile', 0600)) {
+            $response->getBody()->write("Notice: Unable to set permissions on temporary keyfile.");
+        }
 
-        $output = array();
-        $retval = null;
+        $process = null;
+        $result  = "Error during initialization.";
 
         try {
             $process = new Process([
@@ -139,8 +138,6 @@ class Actions
 
             if ($process->isSuccessful()) {
                 $result = $process->getOutput();
-            } else {
-                $result = "Error during initialization.";
             }
         } finally {
             // Clean up temporary keyfile if it still exists
@@ -158,9 +155,6 @@ class Actions
     {
         $data     = (array) $request->getParsedBody();
         $testPath = $data['test_path'] ?? '';
-
-        $output = array();
-        $retval = null;
 
         $process = new Process([
             self::BIN_PATH,
