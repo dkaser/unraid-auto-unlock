@@ -10,6 +10,7 @@ import (
 
 const (
 	signatureBytes = 32
+	nonceBytes     = 12
 )
 
 func SignShare(key []byte, message []byte) ([]byte, error) {
@@ -53,8 +54,8 @@ func VerifyShare(signedMessage []byte, key []byte) ([]byte, error) {
 	return message, nil
 }
 
-func GenerateSigningKey() ([]byte, error) {
-	key := make([]byte, signatureBytes)
+func GenerateRandomKey(length int) ([]byte, error) {
+	key := make([]byte, length)
 
 	_, err := rand.Read(key)
 	if err != nil {

@@ -16,6 +16,7 @@ const (
 type State struct {
 	VerificationKey []byte `json:"verificationKey"`
 	SigningKey      []byte `json:"signingKey"`
+	Nonce           []byte `json:"nonce"`
 	Threshold       uint16 `json:"threshold"`
 }
 
@@ -23,6 +24,7 @@ func WriteStateToFile(
 	fs afero.Fs,
 	verificationKey []byte,
 	signingKey []byte,
+	nonce []byte,
 	stateFile string,
 	threshold uint16,
 ) error {
@@ -30,6 +32,7 @@ func WriteStateToFile(
 	state := State{
 		VerificationKey: verificationKey,
 		SigningKey:      signingKey,
+		Nonce:           nonce,
 		Threshold:       threshold,
 	}
 
