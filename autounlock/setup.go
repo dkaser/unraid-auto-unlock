@@ -9,39 +9,38 @@ import (
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 )
 
-func Setup(fs afero.Fs) error {
-	err := unraid.TestKeyfile(args.KeyFile)
+func (a *AutoUnlock) Setup() error {
+	err := unraid.TestKeyfile(a.args.KeyFile)
 	if err != nil {
 		return fmt.Errorf("keyfile test failed: %w", err)
 	}
 
 	log.Info().Msg("Keyfile test succeeded")
 
-	secret, err := secrets.CreateSecret(args.Threshold, args.Shares)
+	secret, err := secrets.CreateSecret(a.args.Setup.Threshold, a.args.Setup.Shares)
 	if err != nil {
 		return fmt.Errorf("failed to create secret: %w", err)
 	}
 
 	err = state.WriteStateToFile(
-		fs,
+		a.fs,
 		secret.VerificationKey,
 		secret.SigningKey,
-		args.State,
-		args.Threshold,
+		a.args.State,
+		a.args.Setup.Threshold,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to write state to file: %w", err)
 	}
 
-	log.Info().Str("state", args.State).Msg("Wrote state")
+	log.Info().Str("state", a.args.State).Msg("Wrote state")
 
 	err = encryption.EncryptFile(
-		fs,
-		args.KeyFile,
-		args.EncryptedFile,
+		a.fs,
+		a.args.KeyFile,
+		a.args.EncryptedFile,
 		secret.Secret,
 		secret.VerificationKey,
 	)
@@ -49,16 +48,16 @@ func Setup(fs afero.Fs) error {
 		return fmt.Errorf("failed to encrypt file: %w", err)
 	}
 
-	RemoveKeyfile(fs)
+	a.RemoveKeyfile()
 
 	log.Info().
-		Str("keyfile", args.KeyFile).
-		Str("encryptedfile", args.EncryptedFile).
+		Str("keyfile", a.args.KeyFile).
+		Str("encryptedfile", a.args.EncryptedFile).
 		Msg("Encrypted file")
 
 	// Output the threshold and shares
-	fmt.Printf("Total Shares: %d\n", args.Shares)
-	fmt.Printf("Unlock Threshold: %d\n\n", args.Threshold)
+	fmt.Printf("Total Shares: %d\n", a.args.Setup.Shares)
+	fmt.Printf("Unlock Threshold: %d\n\n", a.args.Setup.Threshold)
 
 	fmt.Println("Share values (base64 encoded):")
 

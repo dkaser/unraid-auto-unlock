@@ -18,7 +18,7 @@ import (
 	"golang.org/x/term"
 )
 
-func ObscureSecretFromStdin() error {
+func (a *AutoUnlock) ObscureSecretFromStdin() error {
 	scanner := bufio.NewScanner(os.Stdin)
 	if !scanner.Scan() {
 		return fmt.Errorf("failed to read secret from stdin: %w", scanner.Err())
@@ -36,12 +36,12 @@ func ObscureSecretFromStdin() error {
 	return nil
 }
 
-func InitializeLogging() {
+func (a *AutoUnlock) InitializeLogging() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	if term.IsTerminal(int(os.Stdout.Fd())) || args.Pretty {
+	if term.IsTerminal(int(os.Stdout.Fd())) || a.args.Pretty {
 		log.Logger = log.Output(zerolog.ConsoleWriter{
 			Out:     os.Stderr,
 			NoColor: !term.IsTerminal(int(os.Stderr.Fd())),
@@ -51,21 +51,21 @@ func InitializeLogging() {
 	// File to enable debug mode for testing/startup
 	_, err := os.Stat("/boot/config/plugins/auto-unlock/debug")
 	if err == nil {
-		args.Debug = true
+		a.args.Debug = true
 	}
 
-	if args.Debug {
+	if a.args.Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		log.Debug().Msg("Debug logging enabled")
 	}
 }
 
-func Prechecks(fs afero.Fs) error {
-	if !unraid.IsUnraid(fs) {
+func (a *AutoUnlock) Prechecks() error {
+	if !unraid.IsUnraid(a.fs) {
 		return errors.New("not running on Unraid")
 	}
 
-	err := unraid.WaitForVarIni(fs)
+	err := unraid.WaitForVarIni(a.fs)
 	if err != nil {
 		return fmt.Errorf("failed to wait for var.ini: %w", err)
 	}
@@ -73,11 +73,11 @@ func Prechecks(fs afero.Fs) error {
 	return nil
 }
 
-func RemoveKeyfile(fs afero.Fs) {
+func (a *AutoUnlock) RemoveKeyfile() {
 	// Remove keyfile
-	err := fs.Remove(args.KeyFile)
+	err := a.fs.Remove(a.args.KeyFile)
 	if errors.Is(err, afero.ErrFileNotFound) {
-		log.Debug().Str("keyfile", args.KeyFile).Msg("Keyfile already removed")
+		log.Debug().Str("keyfile", a.args.KeyFile).Msg("Keyfile already removed")
 
 		return
 	}
@@ -88,24 +88,24 @@ func RemoveKeyfile(fs afero.Fs) {
 		return
 	}
 
-	log.Info().Str("keyfile", args.KeyFile).Msg("Removed keyfile")
+	log.Info().Str("keyfile", a.args.KeyFile).Msg("Removed keyfile")
 }
 
-func TestPath(fs afero.Fs) error {
+func (a *AutoUnlock) TestPath() error {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		time.Duration(args.ServerTimeout)*time.Second,
+		time.Duration(a.args.TestPath.ServerTimeout)*time.Second,
 	)
 	defer cancel()
 
-	shareStr, err := secrets.FetchShare(ctx, args.TestPath)
+	shareStr, err := secrets.FetchShare(ctx, a.args.TestPath.Path)
 	if err != nil {
 		return fmt.Errorf("failed to fetch share: %w", err)
 	}
 
 	log.Info().Msg("Retrieved share from remote server")
 
-	appState, err := state.ReadStateFromFile(fs, args.State)
+	appState, err := state.ReadStateFromFile(a.fs, a.args.State)
 	if err != nil {
 		return fmt.Errorf("failed to read state from file: %w", err)
 	}
