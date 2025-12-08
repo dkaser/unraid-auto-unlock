@@ -5,8 +5,6 @@ namespace AutoUnlock;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\Process;
 
 /*
     Copyright (C) 2025  Derek Kaser
@@ -38,139 +36,23 @@ $app->addRoutingMiddleware();
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
 $app->post("{$prefix}/remove", function (Request $request, Response $response, $args) {
-    Utils::removeConfigFiles();
-
-    return $response
-        ->withHeader('Location', '/Tools/AutoUnlock')
-        ->withStatus(303);
+    return Actions::Remove($request, $response);
 });
 
 $app->post("{$prefix}/obscure", function (Request $request, Response $response, $args) {
-    $data       = (array) $request->getParsedBody();
-    $inputValue = isset($data['obscure_value']) ? (string) $data['obscure_value'] : '';
-
-    if (empty($inputValue)) {
-        $response->getBody()->write("Error: No input value provided.");
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
-    }
-
-    $process = new Process([
-        '/usr/local/php/unraid-auto-unlock/bin/autounlock',
-        '--obscure'
-    ]);
-
-    $process->setInput($inputValue);
-    $process->run();
-
-    if ( ! $process->isSuccessful()) {
-        $response->getBody()->write("Error during obscuring process.");
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(500);
-    }
-    $obscuredValue = trim($process->getOutput());
-    $response->getBody()->write($obscuredValue);
-    return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+    return Actions::Obscure($request, $response);
 });
 
 $app->post("{$prefix}/initialize", function (Request $request, Response $response, $args) {
-    $data = (array) $request->getParsedBody();
-
-    $sharesTotal  = isset($data['shares_total']) ? (int) $data['shares_total'] : 5;
-    $sharesUnlock = isset($data['shares_unlock']) ? (int) $data['shares_unlock'] : 3;
-    $keyfileData  = isset($data['keyfile_data']) ? (string) $data['keyfile_data'] : null;
-
-    $keyFileParts   = explode(';base64,', $keyfileData ?? '');
-    $keyFileContent = end($keyFileParts) ?: '';
-
-    if (empty($keyFileContent)) {
-        $response->getBody()->write("Error: No keyfile provided.");
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
-    }
-
-    if ($sharesUnlock < 1 || $sharesTotal < 1 || $sharesUnlock > $sharesTotal || $sharesTotal > 100 || $sharesUnlock > 100) {
-        $response->getBody()->write("Error: Invalid share configuration.");
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
-    }
-
-    $decodedKeyfile = base64_decode($keyFileContent, true);
-    if ($decodedKeyfile === false) {
-        $response->getBody()->write("Error: Invalid keyfile encoding.");
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
-    }
-
-    if (file_put_contents('/root/keyfile', $decodedKeyfile) === false) {
-        $response->getBody()->write("Error: Unable to write temporary keyfile.");
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(500);
-    }
-    @chmod('/root/keyfile', 0600);
-
-    $output = array();
-    $retval = null;
-
-    try {
-        $process = new Process([
-            '/usr/local/php/unraid-auto-unlock/bin/autounlock',
-            '--pretty',
-            '--setup',
-            '--shares', $sharesTotal,
-            '--threshold', $sharesUnlock
-        ]);
-        $process->run();
-
-        if ($process->isSuccessful()) {
-            $result = $process->getOutput();
-        } else {
-            $result = "Error during initialization.";
-        }
-    } finally {
-        // Clean up temporary keyfile if it still exists
-        if (file_exists('/root/keyfile')) {
-            unlink('/root/keyfile');
-        }
-    }
-
-    $responseBody = $result . PHP_EOL . PHP_EOL . "Log:" . PHP_EOL . $process->getErrorOutput();
-    $response->getBody()->write($responseBody);
-    return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+    return Actions::Initialize($request, $response);
 });
 
 $app->post("{$prefix}/test", function (Request $request, Response $response, $args) {
-    $output = array();
-    $retval = null;
-    exec("/usr/local/php/unraid-auto-unlock/bin/autounlock --pretty --debug --test 2>&1", $output, $retval);
-    $responseBody = "Testing Configuration" . PHP_EOL;
-    if ($retval != 0) {
-        $responseBody .= "Result: FAIL" . PHP_EOL;
-    } else {
-        $responseBody .= "Result: SUCCESS" . PHP_EOL;
-    }
-
-    $responseBody .= PHP_EOL . "Log:" . PHP_EOL . implode(PHP_EOL, $output);
-
-    $response->getBody()->write($responseBody);
-    return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+    return Actions::Test($request, $response);
 });
 
 $app->post("{$prefix}/test_path", function (Request $request, Response $response, $args) {
-    $data     = (array) $request->getParsedBody();
-    $testPath = $data['test_path'] ?? '';
-
-    $output = array();
-    $retval = null;
-
-    $safePath = escapeshellarg($testPath);
-    exec("/usr/local/php/unraid-auto-unlock/bin/autounlock --pretty --debug --test-path {$safePath} 2>&1", $output, $retval);
-
-    $responseBody = "Testing path: {$testPath}" . PHP_EOL;
-    if ($retval != 0) {
-        $responseBody .= "Result: FAIL" . PHP_EOL;
-    } else {
-        $responseBody .= "Result: SUCCESS" . PHP_EOL;
-    }
-
-    $responseBody .= PHP_EOL . "Log:" . PHP_EOL . implode(PHP_EOL, $output);
-
-    $response->getBody()->write($responseBody);
-    return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+    return Actions::TestPath($request, $response);
 });
 
 $app->run();
