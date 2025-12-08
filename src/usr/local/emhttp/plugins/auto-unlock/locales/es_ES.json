@@ -17,5 +17,8 @@
     "test": "Probar",
     "test_configuration": "Probar configuración",
     "share_instructions": "Por favor, almacene de forma segura cada una de las participaciones generadas. Su servidor necesitará recuperar al menos el número especificado de participaciones para desbloquear los discos.",
-    "not_shown_again": "Estas participaciones no se volverán a mostrar."
+    "not_shown_again": "Estas participaciones no se volverán a mostrar.",
+    "obscure": "Ocultar",
+    "obscure_value": "Valor oculto",
+    "download_locations_instructions": "Especifique las ubicaciones desde las que el complemento debe recuperar las partes clave durante el arranque. Cada ubicación debe escribirse en una línea separada. Puede encontrar ejemplos de formatos compatibles en el siguiente ejemplo:"
 }

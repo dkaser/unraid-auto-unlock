@@ -17,5 +17,8 @@
     "test": "Testen",
     "test_configuration": "Configuratie testen",
     "share_instructions": "Bewaar elk van de gegenereerde shares op een veilige manier. Uw server moet ten minste het opgegeven aantal shares kunnen ophalen om de schijven te ontgrendelen.",
-    "not_shown_again": "Deze shares worden niet opnieuw weergegeven."
+    "not_shown_again": "Deze shares worden niet opnieuw weergegeven.",
+    "obscure": "Verduisteren",
+    "obscure_value": "Verduisterde waarde",
+    "download_locations_instructions": "Geef de locaties op vanwaar de plug-in de sleutelonderdelen moet ophalen tijdens het opstarten. Elke locatie moet op een aparte regel staan. Voorbeelden van ondersteunde formaten zijn te vinden in het onderstaande voorbeeld."
 }

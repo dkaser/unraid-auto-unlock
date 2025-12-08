@@ -17,5 +17,8 @@
     "test": "Testa",
     "test_configuration": "Testkonfiguration",
     "share_instructions": "Spara varje genererad andel på ett säkert sätt. Din server måste kunna hämta minst det angivna antalet andelar för att låsa upp diskarna.",
-    "not_shown_again": "Dessa andelar kommer inte att visas igen."
+    "not_shown_again": "Dessa andelar kommer inte att visas igen.",
+    "obscure": "Dölj",
+    "obscure_value": "Dolt värde",
+    "download_locations_instructions": "Ange de platser från vilka insticksmodulen ska hämta nyckeldelarna vid uppstart. Varje plats ska stå på en egen rad. Exempel på format som stöds finns i exemplet nedan:"
 }

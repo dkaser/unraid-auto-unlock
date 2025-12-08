@@ -17,5 +17,8 @@
     "test": "测试",
     "test_configuration": "测试配置",
     "share_instructions": "请妥善保存每一个生成的份额。您的服务器需能够检索到至少指定数量的份额才能解锁磁盘。",
-    "not_shown_again": "这些份额将不会再次显示。"
+    "not_shown_again": "这些份额将不会再次显示。",
+    "obscure": "隐藏",
+    "obscure_value": "隐藏值",
+    "download_locations_instructions": "指定插件在启动过程中应从哪些位置检索关键片段。每个位置应占据一行。支持的格式示例如下所示："
 }
