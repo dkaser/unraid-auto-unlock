@@ -31,7 +31,7 @@ func (a *AutoUnlock) Unlock() error {
 		a.args.EncryptedFile,
 		a.args.KeyFile,
 		secret,
-		state.VerificationKey,
+		state.Nonce,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to decrypt file: %w", err)

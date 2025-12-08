@@ -28,6 +28,7 @@ func (a *AutoUnlock) Setup() error {
 		a.fs,
 		secret.VerificationKey,
 		secret.SigningKey,
+		secret.Nonce,
 		a.args.State,
 		a.args.Setup.Threshold,
 	)
@@ -42,7 +43,7 @@ func (a *AutoUnlock) Setup() error {
 		a.args.KeyFile,
 		a.args.EncryptedFile,
 		secret.Secret,
-		secret.VerificationKey,
+		secret.Nonce,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to encrypt file: %w", err)

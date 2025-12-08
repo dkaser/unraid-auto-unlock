@@ -18,9 +18,10 @@ func TestWriteStateToFile_WritesCorrectly(t *testing.T) {
 
 	verificationKey := []byte("test-verification-key")
 	signingKey := []byte("test-signing-key")
+	nonce := []byte("test-nonce")
 	threshold := uint16(3)
 
-	err := WriteStateToFile(fs, verificationKey, signingKey, filePath, threshold)
+	err := WriteStateToFile(fs, verificationKey, signingKey, nonce, filePath, threshold)
 	if err != nil {
 		t.Fatalf("WriteStateToFile failed: %v", err)
 	}
@@ -52,9 +53,10 @@ func TestReadStateFromFile_ReadsCorrectly(t *testing.T) {
 
 	verificationKey := []byte("test-verification-key")
 	signingKey := []byte("test-signing-key")
+	nonce := []byte("test-nonce")
 	threshold := uint16(3)
 
-	err := WriteStateToFile(fs, verificationKey, signingKey, filePath, threshold)
+	err := WriteStateToFile(fs, verificationKey, signingKey, nonce, filePath, threshold)
 	if err != nil {
 		t.Fatalf("WriteStateToFile failed: %v", err)
 	}
@@ -95,7 +97,7 @@ func TestWriteStateToFile_InvalidPath(t *testing.T) {
 	fs := afero.NewReadOnlyFs(afero.NewMemMapFs())
 	filePath := "/readonly/state.json"
 
-	err := WriteStateToFile(fs, []byte("key"), []byte("key"), filePath, 3)
+	err := WriteStateToFile(fs, []byte("key"), []byte("key"), []byte("key"), filePath, 3)
 	if err == nil {
 		t.Error("WriteStateToFile should fail on read-only filesystem")
 	}

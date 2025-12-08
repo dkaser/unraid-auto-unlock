@@ -14,6 +14,7 @@ type SharedSecret struct {
 	SigningKey      []byte
 	Shares          [][]byte
 	Secret          []byte
+	Nonce           []byte
 }
 
 func CreateSecret(threshold uint16, shares uint16) (SharedSecret, error) {
@@ -33,9 +34,14 @@ func CreateSecret(threshold uint16, shares uint16) (SharedSecret, error) {
 	// Save the verification key from the first share (they all have the same verification key).
 	secret.VerificationKey = shareVals[0].VerificationKey.Encode()
 
-	secret.SigningKey, err = GenerateSigningKey()
+	secret.SigningKey, err = GenerateRandomKey(signatureBytes)
 	if err != nil {
 		return SharedSecret{}, fmt.Errorf("failed to generate signing key: %w", err)
+	}
+
+	secret.Nonce, err = GenerateRandomKey(nonceBytes)
+	if err != nil {
+		return SharedSecret{}, fmt.Errorf("failed to generate nonce: %w", err)
 	}
 
 	// Finally, output the shares.
