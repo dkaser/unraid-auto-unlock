@@ -129,8 +129,8 @@ func (a *AutoUnlock) ResetConfiguration() error {
 			Default:   "N",
 		}
 
-		result, err := prompt.Run()
-		if err != nil || (result != "y" && result != "Y") {
+		_, err := prompt.Run()
+		if err != nil {
 			fmt.Println("Reset cancelled.")
 
 			return nil //nolint:nilerr
