@@ -17,5 +17,8 @@
     "test": "Test",
     "test_configuration": "Testkonfigurasjon",
     "share_instructions": "Vennligst lagre hver av de genererte delene på en sikker måte. Serveren din må kunne hente minst det angitte antallet deler for å låse opp diskene.",
-    "not_shown_again": "Disse delene vil ikke vises igjen."
+    "not_shown_again": "Disse delene vil ikke vises igjen.",
+    "obscure": "Skjul",
+    "obscure_value": "Skjul verdi",
+    "download_locations_instructions": "Spesifiser stedene hvor programtillegget skal hente nøkkelbitene under oppstart. Hvert sted skal stå på en egen linje. Eksempler på støttede formater finnes i eksempelet nedenfor."
 }

@@ -17,5 +17,8 @@
     "test": "Tester",
     "test_configuration": "Tester la configuration",
     "share_instructions": "Veuillez stocker en toute sécurité chacune des parts générées. Votre serveur devra pouvoir récupérer au moins le nombre spécifié de parts pour déverrouiller les disques.",
-    "not_shown_again": "Ces parts ne seront plus affichées."
+    "not_shown_again": "Ces parts ne seront plus affichées.",
+    "obscure": "Obscurcir",
+    "obscure_value": "Valeur obscurcie",
+    "download_locations_instructions": "Spécifiez les emplacements à partir desquels le plugin doit récupérer les fragments de clé au démarrage. Chaque emplacement doit figurer sur sa propre ligne. Des exemples de formats pris en charge sont disponibles dans l'exemple ci-dessous :"
 }

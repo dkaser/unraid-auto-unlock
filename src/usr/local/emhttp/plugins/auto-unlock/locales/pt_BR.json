@@ -17,5 +17,8 @@
     "test": "Testar",
     "test_configuration": "Testar configuração",
     "share_instructions": "Armazene com segurança cada uma das partes geradas. Seu servidor precisará recuperar pelo menos o número especificado de partes para desbloquear os discos.",
-    "not_shown_again": "Essas partes não serão exibidas novamente."
+    "not_shown_again": "Essas partes não serão exibidas novamente.",
+    "obscure": "Obscure",
+    "obscure_value": "Valor Obscuro",
+    "download_locations_instructions": "Especifique os locais de onde o plugin deve recuperar as partes da chave durante a inicialização. Cada local deve estar em uma linha separada. Exemplos de formatos compatíveis podem ser encontrados na amostra abaixo."
 }

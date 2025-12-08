@@ -17,5 +17,8 @@
     "test": "Test",
     "test_configuration": "Konfiguration testen",
     "share_instructions": "Bitte bewahren Sie jede der erzeugten Anteile sicher auf. Ihr Server muss in der Lage sein, mindestens die angegebene Anzahl von Anteilen abzurufen, um die Laufwerke zu entsperren.",
-    "not_shown_again": "Diese Anteile werden nicht erneut angezeigt."
+    "not_shown_again": "Diese Anteile werden nicht erneut angezeigt.",
+    "obscure": "Verschleiern",
+    "obscure_value": "Verschleierter Wert",
+    "download_locations_instructions": "Geben Sie die Orte an, von denen das Plugin beim Systemstart die Schlüsselbestandteile abrufen soll. Jeder Ort sollte in einer eigenen Zeile stehen. Beispiele für unterstützte Formate finden Sie im folgenden Beispiel:"
 }

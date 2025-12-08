@@ -17,5 +17,8 @@
     "test": "Testuj",
     "test_configuration": "Testuj konfigurację",
     "share_instructions": "Bezpiecznie przechowaj każdą z wygenerowanych części. Serwer będzie musiał odzyskać co najmniej określoną liczbę części, aby odblokować dyski.",
-    "not_shown_again": "Te części nie zostaną ponownie wyświetlone."
+    "not_shown_again": "Te części nie zostaną ponownie wyświetlone.",
+    "obscure": "Ukryj",
+    "obscure_value": "Ukryta wartość",
+    "download_locations_instructions": "Określ lokalizacje, z których wtyczka ma pobierać kluczowe fragmenty podczas rozruchu. Każda lokalizacja powinna znajdować się w osobnym wierszu. Przykłady obsługiwanych formatów znajdziesz w poniższym przykładzie:"
 }
