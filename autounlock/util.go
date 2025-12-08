@@ -11,6 +11,7 @@ import (
 	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
+	"github.com/manifoldco/promptui"
 	"github.com/rclone/rclone/fs/config/obscure"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -116,6 +117,50 @@ func (a *AutoUnlock) TestPath() error {
 	}
 
 	log.Info().Msg("Successfully retrieved and verified share")
+
+	return nil
+}
+
+func (a *AutoUnlock) ResetConfiguration() error {
+	if !a.args.Reset.Force {
+		prompt := promptui.Prompt{
+			Label:     "Are you sure you want to reset the auto-unlock configuration? This will delete the state and encrypted files",
+			IsConfirm: true,
+			Default:   "N",
+		}
+
+		_, err := prompt.Run()
+		if err != nil {
+			fmt.Println("Reset cancelled.")
+
+			return nil //nolint:nilerr
+		}
+	}
+
+	files := []string{a.args.State, a.args.EncryptedFile, a.args.Config}
+	for _, file := range files {
+		err := a.safeRemoveFile(file)
+		if err != nil {
+			return fmt.Errorf("failed to remove %s: %w", file, err)
+		}
+	}
+
+	return nil
+}
+
+func (a *AutoUnlock) safeRemoveFile(file string) error {
+	err := a.fs.Remove(file)
+	if errors.Is(err, afero.ErrFileNotFound) {
+		log.Debug().Str("file", file).Msg("File already removed")
+
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to remove file %s: %w", file, err)
+	}
+
+	log.Info().Str("file", file).Msg("Removed file")
 
 	return nil
 }
