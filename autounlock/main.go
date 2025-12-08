@@ -45,6 +45,8 @@ func main() {
 	}
 
 	switch {
+	case args.Reset != nil:
+		err = autoUnlock.ResetConfiguration()
 	case args.Obscure != nil:
 		err = autoUnlock.ObscureSecretFromStdin()
 	case args.Setup != nil:
