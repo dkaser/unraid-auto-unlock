@@ -41,7 +41,7 @@ func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 		return fmt.Errorf("failed to read input file: %w", err)
 	}
 
-	// Create an object with two fileBytes as base64 and a random length chunk of padding
+	// Create an object with the plaintext and a random length chunk of padding
 	// This will help obscure the length of the original keyfile
 	paddingLength, err := rand.Int(rand.Reader, big.NewInt(maxPaddingLength-minPaddingLength))
 	if err != nil {
@@ -55,13 +55,13 @@ func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 		return fmt.Errorf("failed to generate random padding: %w", err)
 	}
 
-	encryptionData := encryptionData{
+	envelope := encryptionData{
 		Plaintext: fileBytes,
 		Padding:   padding,
 	}
 
 	// Serialize the object to JSON
-	encryptionDataJSON, err := json.Marshal(encryptionData)
+	envelopeJSON, err := json.Marshal(envelope)
 	if err != nil {
 		return fmt.Errorf("failed to serialize encryption data: %w", err)
 	}
@@ -86,7 +86,7 @@ func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 		return fmt.Errorf("failed to trim nonce: %w", err)
 	}
 
-	ciphertext := gcm.Seal(nil, nonce, encryptionDataJSON, nil)
+	ciphertext := gcm.Seal(nil, nonce, envelopeJSON, nil)
 
 	err = afero.WriteFile(fs, outputPath, ciphertext, encryptionFileMode)
 	if err != nil {
@@ -127,14 +127,17 @@ func DecryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 		return fmt.Errorf("failed to decrypt file: %w", err)
 	}
 
-	var encryptionData encryptionData
+	var envelope encryptionData
 
-	err = json.Unmarshal(plaintext, &encryptionData)
+	err = json.Unmarshal(plaintext, &envelope)
 	if err != nil {
-		return fmt.Errorf("failed to deserialize encryption data: %w", err)
+		return fmt.Errorf(
+			"failed to deserialize encryption data (file may be in old format): %w",
+			err,
+		)
 	}
 
-	plaintext = encryptionData.Plaintext
+	plaintext = envelope.Plaintext
 
 	err = afero.WriteFile(fs, outputPath, plaintext, encryptionFileMode)
 	if err != nil {
