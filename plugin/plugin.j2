@@ -78,7 +78,7 @@ The 'unlock' script. This only runs if /var/local/emhttp/var.ini does not exist 
 <INLINE>
 <![CDATA[
 if [ ! -f /var/local/emhttp/var.ini ]; then
-    /usr/local/php/unraid-auto-unlock/bin/autounlock >> /var/log/autounlock.log 2>&1 &
+    /usr/local/php/unraid-auto-unlock/bin/autounlock unlock >> /var/log/autounlock.log 2>&1 &
 fi
 
 ]]>
