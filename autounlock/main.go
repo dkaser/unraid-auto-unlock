@@ -4,22 +4,9 @@ import (
 	"os"
 
 	"github.com/alexflint/go-arg"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/version"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 )
-
-type AutoUnlock struct {
-	fs   afero.Fs
-	args CmdArgs
-}
-
-func NewAutoUnlock(fs afero.Fs, args CmdArgs) *AutoUnlock {
-	return &AutoUnlock{
-		fs:   fs,
-		args: args,
-	}
-}
 
 func main() {
 	var args CmdArgs
@@ -32,15 +19,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	autoUnlock := NewAutoUnlock(fs, args)
-
-	autoUnlock.InitializeLogging()
-
-	version.OutputToDebug()
-
-	err := autoUnlock.Prechecks()
+	autoUnlock, err := NewAutoUnlock(fs, args)
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("Prechecks failed")
+		log.Error().Stack().Err(err).Msg("Failed to initialize AutoUnlock")
 		os.Exit(1)
 	}
 
