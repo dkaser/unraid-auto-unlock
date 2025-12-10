@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	arrayRetryDelay = 15 * time.Second
-	arrayTimeout    = 15 * time.Minute
+	arrayRetryDelay    = 15 * time.Second
+	arrayStatusTimeout = 120 * time.Second
+	arrayTimeout       = 15 * time.Minute
 )
 
 type BlockDevices struct {
@@ -151,8 +152,9 @@ func StartArray(fs afero.Fs) error {
 		return fmt.Errorf("keyfile not found: %w", err)
 	}
 
-	if !VerifyArrayStatus(fs, "Stopped") {
-		return errors.New("array is not stopped")
+	err = WaitForArrayStatus(fs, "Stopped", arrayStatusTimeout)
+	if err != nil {
+		return fmt.Errorf("array is not stopped: %w", err)
 	}
 
 	log.Info().Msg("Starting array")
@@ -172,23 +174,24 @@ func StartArray(fs afero.Fs) error {
 	return nil
 }
 
-func WaitForArrayStarted(fs afero.Fs) error {
-	deadline := time.Now().Add(arrayTimeout)
+func WaitForArrayStatus(fs afero.Fs, status string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
 
 	for {
-		if VerifyArrayStatus(fs, "Started") {
-			log.Debug().Msg("Array has started")
+		if VerifyArrayStatus(fs, status) {
+			log.Debug().Str("status", status).Msg("Array has reached status")
 
 			return nil
 		}
 
 		if time.Now().After(deadline) {
-			return errors.New("timed out waiting for array to start")
+			return fmt.Errorf("timed out waiting for array to reach status: %s", status)
 		}
 
 		log.Debug().
+			Str("status", status).
 			Int("delaySeconds", int(arrayRetryDelay.Seconds())).
-			Msg("Array not started yet, retrying")
+			Msg("Array has not reached status yet, retrying")
 		time.Sleep(arrayRetryDelay)
 	}
 }

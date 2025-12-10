@@ -275,5 +275,5 @@ func logSharePaths(paths []string) {
 }
 
 func shouldAbort(fs afero.Fs, test bool) bool {
-	return (!unraid.VerifyArrayStatus(fs, "Stopped")) && !test
+	return (unraid.VerifyArrayStatus(fs, "Started")) && !test
 }
