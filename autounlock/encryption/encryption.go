@@ -8,14 +8,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
 	"github.com/spf13/afero"
-)
-
-const (
-	encryptionKeyBytes = 32
-	encryptionFileMode = 0o600
-	minPaddingLength   = 64
-	maxPaddingLength   = 1048576
 )
 
 type encryptionData struct {
@@ -43,12 +37,15 @@ func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 
 	// Create an object with the plaintext and a random length chunk of padding
 	// This will help obscure the length of the original keyfile
-	paddingLength, err := rand.Int(rand.Reader, big.NewInt(maxPaddingLength-minPaddingLength))
+	paddingLength, err := rand.Int(
+		rand.Reader,
+		big.NewInt(constants.MaxPaddingLength-constants.MinPaddingLength),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to generate random padding length: %w", err)
 	}
 
-	padding := make([]byte, minPaddingLength+int(paddingLength.Int64()))
+	padding := make([]byte, constants.MinPaddingLength+int(paddingLength.Int64()))
 
 	_, err = rand.Read(padding)
 	if err != nil {
@@ -66,7 +63,7 @@ func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 		return fmt.Errorf("failed to serialize encryption data: %w", err)
 	}
 
-	key, err = trimKey(key, encryptionKeyBytes)
+	key, err = trimKey(key, constants.EncryptionKeyBytes)
 	if err != nil {
 		return fmt.Errorf("failed to trim key: %w", err)
 	}
@@ -88,7 +85,7 @@ func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 
 	ciphertext := gcm.Seal(nil, nonce, envelopeJSON, nil)
 
-	err = afero.WriteFile(fs, outputPath, ciphertext, encryptionFileMode)
+	err = afero.WriteFile(fs, outputPath, ciphertext, constants.EncryptionFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}
@@ -102,7 +99,7 @@ func DecryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 		return fmt.Errorf("failed to read input file: %w", err)
 	}
 
-	key, err = trimKey(key, encryptionKeyBytes)
+	key, err = trimKey(key, constants.EncryptionKeyBytes)
 	if err != nil {
 		return fmt.Errorf("failed to trim key: %w", err)
 	}
@@ -139,7 +136,7 @@ func DecryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 
 	plaintext = envelope.Plaintext
 
-	err = afero.WriteFile(fs, outputPath, plaintext, encryptionFileMode)
+	err = afero.WriteFile(fs, outputPath, plaintext, constants.EncryptionFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}

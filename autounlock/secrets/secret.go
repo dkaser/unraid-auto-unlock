@@ -7,6 +7,7 @@ import (
 	"github.com/bytemare/ecc"
 	secretsharing "github.com/bytemare/secret-sharing"
 	"github.com/bytemare/secret-sharing/keys"
+	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
 )
 
 type SharedSecret struct {
@@ -34,12 +35,12 @@ func CreateSecret(threshold uint16, shares uint16) (SharedSecret, error) {
 	// Save the verification key from the first share (they all have the same verification key).
 	secret.VerificationKey = shareVals[0].VerificationKey.Encode()
 
-	secret.SigningKey, err = GenerateRandomKey(signatureBytes)
+	secret.SigningKey, err = GenerateRandomKey(constants.SignatureBytes)
 	if err != nil {
 		return SharedSecret{}, fmt.Errorf("failed to generate signing key: %w", err)
 	}
 
-	secret.Nonce, err = GenerateRandomKey(nonceBytes)
+	secret.Nonce, err = GenerateRandomKey(constants.NonceBytes)
 	if err != nil {
 		return SharedSecret{}, fmt.Errorf("failed to generate nonce: %w", err)
 	}

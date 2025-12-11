@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"time"
 
+	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/encryption"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
@@ -11,14 +11,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	arrayTimeout       = 15 * time.Minute
-	arrayStatusTimeout = 120 * time.Second
-)
-
 func (a *AutoUnlock) Unlock() error {
 	if !a.args.Unlock.Test {
-		err := unraid.WaitForArrayStatus(a.fs, "Stopped", arrayStatusTimeout)
+		err := unraid.WaitForArrayStatus(a.fs, "Stopped", constants.ArrayStatusTimeout)
 		if err != nil {
 			return fmt.Errorf("failed to verify array stopped: %w", err)
 		}
@@ -68,7 +63,7 @@ func (a *AutoUnlock) Unlock() error {
 		return fmt.Errorf("failed to start array: %w", err)
 	}
 
-	err = unraid.WaitForArrayStatus(a.fs, "Started", arrayTimeout)
+	err = unraid.WaitForArrayStatus(a.fs, "Started", constants.ArrayTimeout)
 	if err != nil {
 		return fmt.Errorf("failed to verify array started: %w", err)
 	}
