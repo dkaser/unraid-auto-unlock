@@ -9,15 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"gopkg.in/ini.v1"
-)
-
-const (
-	arrayRetryDelay    = 15 * time.Second
-	arrayStatusTimeout = 120 * time.Second
-	arrayTimeout       = 15 * time.Minute
 )
 
 type BlockDevices struct {
@@ -93,7 +88,7 @@ func TestKeyfile(keyfile string) error {
 }
 
 func WaitForVarIni(fs afero.Fs) error {
-	deadline := time.Now().Add(arrayTimeout)
+	deadline := time.Now().Add(constants.ArrayTimeout)
 
 	for {
 		_, err := fs.Stat("/var/local/emhttp/var.ini")
@@ -111,9 +106,9 @@ func WaitForVarIni(fs afero.Fs) error {
 		}
 
 		log.Debug().
-			Int("delaySeconds", int(arrayRetryDelay.Seconds())).
+			Int("delaySeconds", int(constants.ArrayRetryDelay.Seconds())).
 			Msg("var.ini not ready, retrying")
-		time.Sleep(arrayRetryDelay)
+		time.Sleep(constants.ArrayRetryDelay)
 	}
 }
 
@@ -152,7 +147,7 @@ func StartArray(fs afero.Fs) error {
 		return fmt.Errorf("keyfile not found: %w", err)
 	}
 
-	err = WaitForArrayStatus(fs, "Stopped", arrayStatusTimeout)
+	err = WaitForArrayStatus(fs, "Stopped", constants.ArrayStatusTimeout)
 	if err != nil {
 		return fmt.Errorf("array is not stopped: %w", err)
 	}
@@ -190,8 +185,8 @@ func WaitForArrayStatus(fs afero.Fs, status string, timeout time.Duration) error
 
 		log.Debug().
 			Str("status", status).
-			Int("delaySeconds", int(arrayRetryDelay.Seconds())).
+			Int("delaySeconds", int(constants.ArrayRetryDelay.Seconds())).
 			Msg("Array has not reached status yet, retrying")
-		time.Sleep(arrayRetryDelay)
+		time.Sleep(constants.ArrayRetryDelay)
 	}
 }

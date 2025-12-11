@@ -6,11 +6,8 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-)
 
-const (
-	signatureBytes = 32
-	nonceBytes     = 12
+	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
 )
 
 func SignShare(key []byte, message []byte) ([]byte, error) {
@@ -34,13 +31,13 @@ func calculateHMAC(key []byte, message []byte) ([]byte, error) {
 }
 
 func VerifyShare(signedMessage []byte, key []byte) ([]byte, error) {
-	if len(signedMessage) < signatureBytes {
+	if len(signedMessage) < constants.SignatureBytes {
 		return nil, errors.New("signed message too short")
 	}
 
 	// Split the signed message into the original message and the signature (last 32 bytes).
-	message := signedMessage[:len(signedMessage)-signatureBytes]
-	signature := signedMessage[len(signedMessage)-signatureBytes:]
+	message := signedMessage[:len(signedMessage)-constants.SignatureBytes]
+	signature := signedMessage[len(signedMessage)-constants.SignatureBytes:]
 
 	expectedMAC, err := calculateHMAC(key, message)
 	if err != nil {

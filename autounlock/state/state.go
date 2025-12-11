@@ -5,12 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
 	"github.com/spf13/afero"
-)
-
-const (
-	stateDirMode  = 0o700
-	stateFileMode = 0o600
 )
 
 type State struct {
@@ -42,13 +38,13 @@ func WriteStateToFile(
 	}
 
 	// Ensure the directory for the state file exists
-	err = fs.MkdirAll(filepath.Dir(stateFile), stateDirMode)
+	err = fs.MkdirAll(filepath.Dir(stateFile), constants.StateDirMode)
 	if err != nil {
 		return fmt.Errorf("failed to create directory for state file: %w", err)
 	}
 
 	// Write the JSON data to the state file
-	err = afero.WriteFile(fs, stateFile, data, stateFileMode)
+	err = afero.WriteFile(fs, stateFile, data, constants.StateFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write state file: %w", err)
 	}
