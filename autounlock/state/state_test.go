@@ -10,10 +10,11 @@ import (
 // - Verify that WriteStateToFile correctly writes the state to a file.
 // - Ensure that ReadStateFromFile accurately reads and parses the state from a file.
 // - Test error handling for file read/write operations.
-// - Test error handling for invalid/incorrect JSON data.
+// Test error handling for invalid/incorrect JSON data.
 
 func TestWriteStateToFile_WritesCorrectly(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	filePath := "/test/state.json"
 
 	verificationKey := []byte("test-verification-key")
@@ -21,7 +22,7 @@ func TestWriteStateToFile_WritesCorrectly(t *testing.T) {
 	nonce := []byte("test-nonce")
 	threshold := uint16(3)
 
-	err := WriteStateToFile(fs, verificationKey, signingKey, nonce, filePath, threshold)
+	err := svc.WriteStateToFile(verificationKey, signingKey, nonce, filePath, threshold)
 	if err != nil {
 		t.Fatalf("WriteStateToFile failed: %v", err)
 	}
@@ -49,6 +50,7 @@ func TestWriteStateToFile_WritesCorrectly(t *testing.T) {
 
 func TestReadStateFromFile_ReadsCorrectly(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	filePath := "/test/state.json"
 
 	verificationKey := []byte("test-verification-key")
@@ -56,12 +58,12 @@ func TestReadStateFromFile_ReadsCorrectly(t *testing.T) {
 	nonce := []byte("test-nonce")
 	threshold := uint16(3)
 
-	err := WriteStateToFile(fs, verificationKey, signingKey, nonce, filePath, threshold)
+	err := svc.WriteStateToFile(verificationKey, signingKey, nonce, filePath, threshold)
 	if err != nil {
 		t.Fatalf("WriteStateToFile failed: %v", err)
 	}
 
-	readState, err := ReadStateFromFile(fs, filePath)
+	readState, err := svc.ReadStateFromFile(filePath)
 	if err != nil {
 		t.Fatalf("ReadStateFromFile failed: %v", err)
 	}
@@ -85,9 +87,10 @@ func TestReadStateFromFile_ReadsCorrectly(t *testing.T) {
 
 func TestReadStateFromFile_FileNotFound(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	filePath := "/nonexistent/state.json"
 
-	_, err := ReadStateFromFile(fs, filePath)
+	_, err := svc.ReadStateFromFile(filePath)
 	if err == nil {
 		t.Error("ReadStateFromFile should fail when file does not exist")
 	}
@@ -95,9 +98,10 @@ func TestReadStateFromFile_FileNotFound(t *testing.T) {
 
 func TestWriteStateToFile_InvalidPath(t *testing.T) {
 	fs := afero.NewReadOnlyFs(afero.NewMemMapFs())
+	svc := NewService(fs)
 	filePath := "/readonly/state.json"
 
-	err := WriteStateToFile(fs, []byte("key"), []byte("key"), []byte("key"), filePath, 3)
+	err := svc.WriteStateToFile([]byte("key"), []byte("key"), []byte("key"), filePath, 3)
 	if err == nil {
 		t.Error("WriteStateToFile should fail on read-only filesystem")
 	}
@@ -105,6 +109,7 @@ func TestWriteStateToFile_InvalidPath(t *testing.T) {
 
 func TestReadStateFromFile_InvalidJSON(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	filePath := "/test/state.json"
 
 	err := afero.WriteFile(fs, filePath, []byte("not valid json {{{"), 0o600)
@@ -112,7 +117,7 @@ func TestReadStateFromFile_InvalidJSON(t *testing.T) {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	_, err = ReadStateFromFile(fs, filePath)
+	_, err = svc.ReadStateFromFile(filePath)
 	if err == nil {
 		t.Error("ReadStateFromFile should fail with invalid JSON")
 	}
@@ -120,6 +125,7 @@ func TestReadStateFromFile_InvalidJSON(t *testing.T) {
 
 func TestReadStateFromFile_EmptyFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	filePath := "/test/state.json"
 
 	err := afero.WriteFile(fs, filePath, []byte(""), 0o600)
@@ -127,7 +133,7 @@ func TestReadStateFromFile_EmptyFile(t *testing.T) {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	_, err = ReadStateFromFile(fs, filePath)
+	_, err = svc.ReadStateFromFile(filePath)
 	if err == nil {
 		t.Error("ReadStateFromFile should fail with empty file")
 	}
@@ -135,6 +141,7 @@ func TestReadStateFromFile_EmptyFile(t *testing.T) {
 
 func TestReadStateFromFile_PartialJSON(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	filePath := "/test/state.json"
 
 	err := afero.WriteFile(fs, filePath, []byte(`{"threshold": 3, "signingKey":`), 0o600)
@@ -142,7 +149,7 @@ func TestReadStateFromFile_PartialJSON(t *testing.T) {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	_, err = ReadStateFromFile(fs, filePath)
+	_, err = svc.ReadStateFromFile(filePath)
 	if err == nil {
 		t.Error("ReadStateFromFile should fail with incomplete JSON")
 	}
@@ -150,6 +157,7 @@ func TestReadStateFromFile_PartialJSON(t *testing.T) {
 
 func TestReadStateFromFile_WrongJSONStructure(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	filePath := "/test/state.json"
 
 	err := afero.WriteFile(
@@ -162,7 +170,7 @@ func TestReadStateFromFile_WrongJSONStructure(t *testing.T) {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	_, err = ReadStateFromFile(fs, filePath)
+	_, err = svc.ReadStateFromFile(filePath)
 	if err == nil {
 		t.Error("ReadStateFromFile should fail with wrong JSON types")
 	}

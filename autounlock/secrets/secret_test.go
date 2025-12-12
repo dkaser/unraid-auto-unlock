@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/bytemare/secret-sharing/keys"
+	"github.com/spf13/afero"
 )
 
 // Testing objectives:
@@ -28,7 +29,10 @@ func TestCreateSecret_GeneratesCorrectNumberOfShares(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			secret, err := CreateSecret(tc.threshold, tc.shares)
+			fs := afero.NewMemMapFs()
+			svc := NewService(fs)
+
+			secret, err := svc.CreateSecret(tc.threshold, tc.shares)
 			if err != nil {
 				t.Fatalf("CreateSecret failed: %v", err)
 			}
@@ -53,10 +57,12 @@ func TestCreateSecret_GeneratesCorrectNumberOfShares(t *testing.T) {
 }
 
 func TestCombineSecret_ReconstructsOriginalSecret(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	threshold := uint16(3)
 	shares := uint16(5)
 
-	sharedSecret, err := CreateSecret(threshold, shares)
+	sharedSecret, err := svc.CreateSecret(threshold, shares)
 	if err != nil {
 		t.Fatalf("CreateSecret failed: %v", err)
 	}
@@ -66,7 +72,7 @@ func TestCombineSecret_ReconstructsOriginalSecret(t *testing.T) {
 	for i := range threshold {
 		shareBase64 := base64.StdEncoding.EncodeToString(sharedSecret.Shares[i])
 
-		keyShare, err := GetShare(shareBase64, sharedSecret.SigningKey)
+		keyShare, err := svc.GetShare(shareBase64, sharedSecret.SigningKey)
 		if err != nil {
 			t.Fatalf("GetShare failed for share %d: %v", i, err)
 		}
@@ -74,7 +80,7 @@ func TestCombineSecret_ReconstructsOriginalSecret(t *testing.T) {
 		keyShares[i] = keyShare
 	}
 
-	reconstructed, err := CombineSecret(keyShares)
+	reconstructed, err := svc.CombineSecret(keyShares)
 	if err != nil {
 		t.Fatalf("CombineSecret failed: %v", err)
 	}
@@ -94,7 +100,10 @@ func TestCreateSecret_GeneratesUniqueSecrets(t *testing.T) {
 
 	verificationKeys := make([][]byte, iterations)
 	for i := range iterations {
-		sharedSecret, err := CreateSecret(threshold, shares)
+		fs := afero.NewMemMapFs()
+		svc := NewService(fs)
+
+		sharedSecret, err := svc.CreateSecret(threshold, shares)
 		if err != nil {
 			t.Fatalf("CreateSecret failed on iteration %d: %v", i, err)
 		}
@@ -122,7 +131,10 @@ func TestCreateSecret_GeneratesUniqueSecrets(t *testing.T) {
 }
 
 func TestGetShare_InvalidBase64(t *testing.T) {
-	sharedSecret, err := CreateSecret(2, 3)
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+
+	sharedSecret, err := svc.CreateSecret(2, 3)
 	if err != nil {
 		t.Fatalf("CreateSecret failed: %v", err)
 	}
@@ -130,14 +142,17 @@ func TestGetShare_InvalidBase64(t *testing.T) {
 	// Test with invalid base64 characters
 	invalidBase64 := "!!!not-valid-base64!!!"
 
-	_, err = GetShare(invalidBase64, sharedSecret.SigningKey)
+	_, err = svc.GetShare(invalidBase64, sharedSecret.SigningKey)
 	if err == nil {
 		t.Error("GetShare should fail with invalid base64 input")
 	}
 }
 
 func TestGetShare_InvalidSignature(t *testing.T) {
-	sharedSecret, err := CreateSecret(2, 3)
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+
+	sharedSecret, err := svc.CreateSecret(2, 3)
 	if err != nil {
 		t.Fatalf("CreateSecret failed: %v", err)
 	}
@@ -153,7 +168,7 @@ func TestGetShare_InvalidSignature(t *testing.T) {
 	corruptedBytes[len(corruptedBytes)-2] ^= 0xFF
 	corruptedShareBase64 := base64.StdEncoding.EncodeToString(corruptedBytes)
 
-	_, err = GetShare(corruptedShareBase64, sharedSecret.SigningKey)
+	_, err = svc.GetShare(corruptedShareBase64, sharedSecret.SigningKey)
 	if err == nil {
 		t.Errorf(
 			"GetShare should fail with corrupted signature, valid input was: %s",
@@ -163,13 +178,15 @@ func TestGetShare_InvalidSignature(t *testing.T) {
 }
 
 func TestGetShare_WrongSigningKey(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	// Create two separate secrets with different signing keys
-	secret1, err := CreateSecret(2, 3)
+	secret1, err := svc.CreateSecret(2, 3)
 	if err != nil {
 		t.Fatalf("CreateSecret for secret1 failed: %v", err)
 	}
 
-	secret2, err := CreateSecret(2, 3)
+	secret2, err := svc.CreateSecret(2, 3)
 	if err != nil {
 		t.Fatalf("CreateSecret for secret2 failed: %v", err)
 	}
@@ -177,7 +194,7 @@ func TestGetShare_WrongSigningKey(t *testing.T) {
 	// Try to verify share from secret1 using signing key from secret2
 	shareBase64 := base64.StdEncoding.EncodeToString(secret1.Shares[0])
 
-	_, err = GetShare(shareBase64, secret2.SigningKey)
+	_, err = svc.GetShare(shareBase64, secret2.SigningKey)
 	if err == nil {
 		t.Error("GetShare should fail when using wrong signing key")
 	}

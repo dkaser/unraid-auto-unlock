@@ -4,22 +4,20 @@ import (
 	"fmt"
 
 	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/encryption"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
 	"github.com/rs/zerolog/log"
 )
 
+// Unlock decrypts the keyfile and starts the array.
 func (a *AutoUnlock) Unlock() error {
 	if !a.args.Unlock.Test {
-		err := unraid.WaitForArrayStatus(a.fs, "Stopped", constants.ArrayStatusTimeout)
+		err := a.unraid.WaitForArrayStatus("Stopped", constants.ArrayStatusTimeout)
 		if err != nil {
 			return fmt.Errorf("failed to verify array stopped: %w", err)
 		}
 	}
 
-	state, err := state.ReadStateFromFile(a.fs, a.args.State)
+	state, err := a.state.ReadStateFromFile(a.args.State)
 	if err != nil {
 		return fmt.Errorf("failed to read state from file: %w", err)
 	}
@@ -29,8 +27,7 @@ func (a *AutoUnlock) Unlock() error {
 		return fmt.Errorf("failed to retrieve secret: %w", err)
 	}
 
-	err = encryption.DecryptFile(
-		a.fs,
+	err = a.encryption.DecryptFile(
 		a.args.EncryptedFile,
 		a.args.KeyFile,
 		secret,
@@ -48,7 +45,7 @@ func (a *AutoUnlock) Unlock() error {
 		Msg("Decrypted file")
 
 	if a.args.Unlock.Test {
-		err := unraid.TestKeyfile(a.args.KeyFile)
+		err := a.unraid.TestKeyfile(a.args.KeyFile)
 		if err != nil {
 			return fmt.Errorf("keyfile test failed: %w", err)
 		}
@@ -58,12 +55,12 @@ func (a *AutoUnlock) Unlock() error {
 		return nil
 	}
 
-	err = unraid.StartArray(a.fs)
+	err = a.unraid.StartArray()
 	if err != nil {
 		return fmt.Errorf("failed to start array: %w", err)
 	}
 
-	err = unraid.WaitForArrayStatus(a.fs, "Started", constants.ArrayTimeout)
+	err = a.unraid.WaitForArrayStatus("Started", constants.ArrayTimeout)
 	if err != nil {
 		return fmt.Errorf("failed to verify array started: %w", err)
 	}
@@ -71,25 +68,25 @@ func (a *AutoUnlock) Unlock() error {
 	return nil
 }
 
-func (a *AutoUnlock) retrieveSecret(state state.State) ([]byte, error) {
-	sharePaths, err := secrets.ReadPathsFromFile(a.fs, a.args.Config)
+func (a *AutoUnlock) retrieveSecret(appState state.State) ([]byte, error) {
+	sharePaths, err := a.secrets.ReadPathsFromFile(a.args.Config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read paths from config file: %w", err)
 	}
 
-	shares, err := secrets.GetShares(
-		a.fs,
+	shares, err := a.secrets.GetShares(
 		sharePaths,
-		state,
+		appState,
 		a.args.Unlock.RetryDelay,
 		a.args.Unlock.ServerTimeout,
 		a.args.Unlock.Test,
+		a.unraid,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get shares: %w", err)
 	}
 
-	secret, err := secrets.CombineSecret(shares)
+	secret, err := a.secrets.CombineSecret(shares)
 	if err != nil {
 		return nil, fmt.Errorf("failed to combine secret: %w", err)
 	}

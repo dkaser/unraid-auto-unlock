@@ -4,28 +4,24 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/dkaser/unraid-auto-unlock/autounlock/encryption"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
 	"github.com/rs/zerolog/log"
 )
 
+// Setup configures the auto-unlock system.
 func (a *AutoUnlock) Setup() error {
-	err := unraid.TestKeyfile(a.args.KeyFile)
+	err := a.unraid.TestKeyfile(a.args.KeyFile)
 	if err != nil {
 		return fmt.Errorf("keyfile test failed: %w", err)
 	}
 
 	log.Info().Msg("Keyfile test succeeded")
 
-	secret, err := secrets.CreateSecret(a.args.Setup.Threshold, a.args.Setup.Shares)
+	secret, err := a.secrets.CreateSecret(a.args.Setup.Threshold, a.args.Setup.Shares)
 	if err != nil {
 		return fmt.Errorf("failed to create secret: %w", err)
 	}
 
-	err = state.WriteStateToFile(
-		a.fs,
+	err = a.state.WriteStateToFile(
 		secret.VerificationKey,
 		secret.SigningKey,
 		secret.Nonce,
@@ -38,8 +34,7 @@ func (a *AutoUnlock) Setup() error {
 
 	log.Info().Str("state", a.args.State).Msg("Wrote state")
 
-	err = encryption.EncryptFile(
-		a.fs,
+	err = a.encryption.EncryptFile(
 		a.args.KeyFile,
 		a.args.EncryptedFile,
 		secret.Secret,

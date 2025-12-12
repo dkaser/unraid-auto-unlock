@@ -12,6 +12,16 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Service provides encryption operations.
+type Service struct {
+	fs afero.Fs
+}
+
+// NewService creates a new encryption service.
+func NewService(fs afero.Fs) *Service {
+	return &Service{fs: fs}
+}
+
 type encryptionData struct {
 	Plaintext []byte `json:"plaintext"`
 	Padding   []byte `json:"padding"`
@@ -29,27 +39,66 @@ func trimKey(key []byte, length int) ([]byte, error) {
 	return key[:length], nil
 }
 
-func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, nonce []byte) error {
-	fileBytes, err := afero.ReadFile(fs, inputPath)
-	if err != nil {
-		return fmt.Errorf("failed to read input file: %w", err)
-	}
-
-	// Create an object with the plaintext and a random length chunk of padding
-	// This will help obscure the length of the original keyfile
+func generatePadding() ([]byte, error) {
 	paddingLength, err := rand.Int(
 		rand.Reader,
 		big.NewInt(constants.MaxPaddingLength-constants.MinPaddingLength),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to generate random padding length: %w", err)
+		return nil, fmt.Errorf("failed to generate random padding length: %w", err)
 	}
 
 	padding := make([]byte, constants.MinPaddingLength+int(paddingLength.Int64()))
 
 	_, err = rand.Read(padding)
 	if err != nil {
-		return fmt.Errorf("failed to generate random padding: %w", err)
+		return nil, fmt.Errorf("failed to generate random padding: %w", err)
+	}
+
+	return padding, nil
+}
+
+func encryptData(data []byte, key []byte, nonce []byte) ([]byte, error) {
+	key, err := trimKey(key, constants.EncryptionKeyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to trim key: %w", err)
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create cipher: %w", err)
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create GCM: %w", err)
+	}
+
+	nonce, err = trimKey(nonce, gcm.NonceSize())
+	if err != nil {
+		return nil, fmt.Errorf("failed to trim nonce: %w", err)
+	}
+
+	return gcm.Seal(nil, nonce, data, nil), nil
+}
+
+// EncryptFile encrypts a file using AES-GCM.
+func (s *Service) EncryptFile(
+	inputPath string,
+	outputPath string,
+	key []byte,
+	nonce []byte,
+) error {
+	fileBytes, err := afero.ReadFile(s.fs, inputPath)
+	if err != nil {
+		return fmt.Errorf("failed to read input file: %w", err)
+	}
+
+	// Create an object with the plaintext and a random length chunk of padding
+	// This will help obscure the length of the original keyfile
+	padding, err := generatePadding()
+	if err != nil {
+		return err
 	}
 
 	envelope := encryptionData{
@@ -63,29 +112,12 @@ func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 		return fmt.Errorf("failed to serialize encryption data: %w", err)
 	}
 
-	key, err = trimKey(key, constants.EncryptionKeyBytes)
+	ciphertext, err := encryptData(envelopeJSON, key, nonce)
 	if err != nil {
-		return fmt.Errorf("failed to trim key: %w", err)
+		return err
 	}
 
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return fmt.Errorf("failed to create cipher: %w", err)
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return fmt.Errorf("failed to create GCM: %w", err)
-	}
-
-	nonce, err = trimKey(nonce, gcm.NonceSize())
-	if err != nil {
-		return fmt.Errorf("failed to trim nonce: %w", err)
-	}
-
-	ciphertext := gcm.Seal(nil, nonce, envelopeJSON, nil)
-
-	err = afero.WriteFile(fs, outputPath, ciphertext, constants.EncryptionFileMode)
+	err = afero.WriteFile(s.fs, outputPath, ciphertext, constants.EncryptionFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}
@@ -93,8 +125,14 @@ func EncryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 	return nil
 }
 
-func DecryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, nonce []byte) error {
-	ciphertext, err := afero.ReadFile(fs, inputPath)
+// DecryptFile decrypts a file using AES-GCM.
+func (s *Service) DecryptFile(
+	inputPath string,
+	outputPath string,
+	key []byte,
+	nonce []byte,
+) error {
+	ciphertext, err := afero.ReadFile(s.fs, inputPath)
 	if err != nil {
 		return fmt.Errorf("failed to read input file: %w", err)
 	}
@@ -136,7 +174,7 @@ func DecryptFile(fs afero.Fs, inputPath string, outputPath string, key []byte, n
 
 	plaintext = envelope.Plaintext
 
-	err = afero.WriteFile(fs, outputPath, plaintext, constants.EncryptionFileMode)
+	err = afero.WriteFile(s.fs, outputPath, plaintext, constants.EncryptionFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write output file: %w", err)
 	}

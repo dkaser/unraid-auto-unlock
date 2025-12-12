@@ -9,6 +9,17 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Service provides state management operations.
+type Service struct {
+	fs afero.Fs
+}
+
+// NewService creates a new state service.
+func NewService(fs afero.Fs) *Service {
+	return &Service{fs: fs}
+}
+
+// State represents the application state.
 type State struct {
 	VerificationKey []byte `json:"verificationKey"`
 	SigningKey      []byte `json:"signingKey"`
@@ -16,8 +27,8 @@ type State struct {
 	Threshold       uint16 `json:"threshold"`
 }
 
-func WriteStateToFile(
-	fs afero.Fs,
+// WriteStateToFile writes the state to a file.
+func (s *Service) WriteStateToFile(
 	verificationKey []byte,
 	signingKey []byte,
 	nonce []byte,
@@ -38,13 +49,13 @@ func WriteStateToFile(
 	}
 
 	// Ensure the directory for the state file exists
-	err = fs.MkdirAll(filepath.Dir(stateFile), constants.StateDirMode)
+	err = s.fs.MkdirAll(filepath.Dir(stateFile), constants.StateDirMode)
 	if err != nil {
 		return fmt.Errorf("failed to create directory for state file: %w", err)
 	}
 
 	// Write the JSON data to the state file
-	err = afero.WriteFile(fs, stateFile, data, constants.StateFileMode)
+	err = afero.WriteFile(s.fs, stateFile, data, constants.StateFileMode)
 	if err != nil {
 		return fmt.Errorf("failed to write state file: %w", err)
 	}
@@ -52,11 +63,12 @@ func WriteStateToFile(
 	return nil
 }
 
-func ReadStateFromFile(fs afero.Fs, stateFile string) (State, error) {
+// ReadStateFromFile reads the state from a file.
+func (s *Service) ReadStateFromFile(stateFile string) (State, error) {
 	var state State
 
 	// Read the JSON data from the state file
-	data, err := afero.ReadFile(fs, stateFile)
+	data, err := afero.ReadFile(s.fs, stateFile)
 	if err != nil {
 		return state, fmt.Errorf("failed to read state file: %w", err)
 	}

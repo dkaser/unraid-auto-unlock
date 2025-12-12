@@ -13,11 +13,9 @@ import (
 
 	"github.com/bytemare/secret-sharing/keys"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
 	_ "github.com/rclone/rclone/backend/all" // Import all rclone backends
 	"github.com/rclone/rclone/fs"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/afero"
 )
 
 type RetrievedShare struct {
@@ -105,8 +103,9 @@ func splitLocalPath(path string) (string, string) {
 	return path[:idx], path[idx+1:]
 }
 
-func ReadPathsFromFile(fs afero.Fs, filename string) ([]string, error) {
-	file, err := fs.Open(filename)
+// ReadPathsFromFile reads share paths from a configuration file.
+func (s *Service) ReadPathsFromFile(filename string) ([]string, error) {
+	file, err := s.fs.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open paths file: %w", err)
 	}
@@ -135,7 +134,7 @@ func ReadPathsFromFile(fs afero.Fs, filename string) ([]string, error) {
 	return paths, nil
 }
 
-func tryGetShare(
+func (s *Service) tryGetShare(
 	path string,
 	pathNum int,
 	signingKey []byte,
@@ -155,7 +154,7 @@ func tryGetShare(
 
 	triedPaths[path] = true
 
-	share, err := GetShare(shareStr, signingKey)
+	share, err := s.GetShare(shareStr, signingKey)
 	if err != nil {
 		log.Debug().Int("path", pathNum).Stack().Err(err).Msg("Failed to get share")
 
@@ -178,13 +177,13 @@ func tryGetShare(
 	}, nil
 }
 
-func collectShares(
-	fs afero.Fs,
+func (s *Service) collectShares(
 	paths []string,
 	appState state.State,
 	retryDuration time.Duration,
 	serverTimeout time.Duration,
 	test bool,
+	unraidSvc unraidVerifier,
 ) ([]*keys.KeyShare, error) {
 	var shares []*keys.KeyShare
 
@@ -192,7 +191,7 @@ func collectShares(
 	seenShares := make(map[string]bool)
 
 	for {
-		if shouldAbort(fs, test) {
+		if shouldAbort(unraidSvc, test) {
 			return nil, errors.New("array is no longer stopped, aborting share retrieval")
 		}
 
@@ -202,7 +201,7 @@ func collectShares(
 				continue
 			}
 
-			retrievedShare, err := tryGetShare(
+			retrievedShare, err := s.tryGetShare(
 				path,
 				pathNum,
 				appState.SigningKey,
@@ -239,20 +238,28 @@ func collectShares(
 	return shares, nil
 }
 
-func GetShares(
-	fs afero.Fs,
+// GetShares retrieves shares from configured paths.
+func (s *Service) GetShares(
 	paths []string,
 	appState state.State,
 	retryInterval uint16,
 	serverTimeout uint16,
 	test bool,
+	unraidSvc unraidVerifier,
 ) ([]*keys.KeyShare, error) {
 	retryDuration := time.Duration(retryInterval) * time.Second
 	serverTimeoutDuration := time.Duration(serverTimeout) * time.Second
 
 	logSharePaths(paths)
 
-	shares, err := collectShares(fs, paths, appState, retryDuration, serverTimeoutDuration, test)
+	shares, err := s.collectShares(
+		paths,
+		appState,
+		retryDuration,
+		serverTimeoutDuration,
+		test,
+		unraidSvc,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -274,6 +281,14 @@ func logSharePaths(paths []string) {
 	}
 }
 
-func shouldAbort(fs afero.Fs, test bool) bool {
-	return (unraid.VerifyArrayStatus(fs, "Started")) && !test
+type unraidVerifier interface {
+	VerifyArrayStatus(status string) bool
+}
+
+func shouldAbort(unraidSvc unraidVerifier, test bool) bool {
+	if test || unraidSvc == nil {
+		return false
+	}
+
+	return unraidSvc.VerifyArrayStatus("Started")
 }

@@ -79,10 +79,11 @@ func TestTrimKey(t *testing.T) {
 
 func TestEncryptFile_ReadError(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	key := make([]byte, 32)
 	nonce := make([]byte, 12)
 
-	err := EncryptFile(fs, "/nonexistent", "/output", key, nonce)
+	err := svc.EncryptFile("/nonexistent", "/output", key, nonce)
 	if err == nil {
 		t.Error("expected error for nonexistent input file")
 	}
@@ -98,8 +99,9 @@ func TestEncryptFile_WriteError(t *testing.T) {
 
 	// Create read-only filesystem to simulate write error
 	roFs := afero.NewReadOnlyFs(fs)
+	svc := NewService(roFs)
 
-	err := EncryptFile(roFs, "/input.txt", "/output.enc", key, nonce)
+	err := svc.EncryptFile("/input.txt", "/output", key, nonce)
 	if err == nil {
 		t.Error("expected error when writing to read-only filesystem")
 	}
@@ -107,12 +109,13 @@ func TestEncryptFile_WriteError(t *testing.T) {
 
 func TestEncryptFile_ShortKey(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	shortKey := make([]byte, 16) // Too short
 	nonce := make([]byte, 12)
 
 	afero.WriteFile(fs, "/input.txt", []byte("test data"), 0o644)
 
-	err := EncryptFile(fs, "/input.txt", "/output.enc", shortKey, nonce)
+	err := svc.EncryptFile("/input.txt", "/output.enc", shortKey, nonce)
 	if err == nil {
 		t.Error("expected error for short key")
 	}
@@ -120,13 +123,14 @@ func TestEncryptFile_ShortKey(t *testing.T) {
 
 func TestEncryptFile_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	key := make([]byte, 32)
 	nonce := make([]byte, 12)
 	plaintext := []byte("hello world, this is test data!")
 
 	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
 
-	err := EncryptFile(fs, "/input.txt", "/output.enc", key, nonce)
+	err := svc.EncryptFile("/input.txt", "/output.enc", key, nonce)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -144,10 +148,11 @@ func TestEncryptFile_Success(t *testing.T) {
 
 func TestDecryptFile_ReadError(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	key := make([]byte, 32)
 	nonce := make([]byte, 12)
 
-	err := DecryptFile(fs, "/nonexistent", "/output", key, nonce)
+	err := svc.DecryptFile("/nonexistent", "/output", key, nonce)
 	if err == nil {
 		t.Error("expected error for nonexistent input file")
 	}
@@ -160,13 +165,16 @@ func TestDecryptFile_WriteError(t *testing.T) {
 	plaintext := []byte("test data")
 
 	// First encrypt to get valid ciphertext
+	svc := NewService(fs)
+
 	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
-	EncryptFile(fs, "/input.txt", "/encrypted.enc", key, nonce)
+	svc.EncryptFile("/input.txt", "/encrypted.enc", key, nonce)
 
 	// Use read-only filesystem to simulate write error
 	roFs := afero.NewReadOnlyFs(fs)
+	svcRO := NewService(roFs)
 
-	err := DecryptFile(roFs, "/encrypted.enc", "/decrypted.txt", key, nonce)
+	err := svcRO.DecryptFile("/encrypted.enc", "/decrypted.txt", key, nonce)
 	if err == nil {
 		t.Error("expected error when writing to read-only filesystem")
 	}
@@ -174,12 +182,13 @@ func TestDecryptFile_WriteError(t *testing.T) {
 
 func TestDecryptFile_ShortKey(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	shortKey := make([]byte, 16) // Too short
 	nonce := make([]byte, 12)
 
 	afero.WriteFile(fs, "/encrypted.enc", []byte("fake ciphertext"), 0o644)
 
-	err := DecryptFile(fs, "/encrypted.enc", "/output.txt", shortKey, nonce)
+	err := svc.DecryptFile("/encrypted.enc", "/output.txt", shortKey, nonce)
 	if err == nil {
 		t.Error("expected error for short key")
 	}
@@ -187,13 +196,14 @@ func TestDecryptFile_ShortKey(t *testing.T) {
 
 func TestDecryptFile_InvalidCiphertext(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	key := make([]byte, 32)
 	nonce := make([]byte, 12)
 
 	// Write invalid ciphertext
 	afero.WriteFile(fs, "/invalid.enc", []byte("not valid ciphertext"), 0o644)
 
-	err := DecryptFile(fs, "/invalid.enc", "/output.txt", key, nonce)
+	err := svc.DecryptFile("/invalid.enc", "/output.txt", key, nonce)
 	if err == nil {
 		t.Error("expected error for invalid ciphertext")
 	}
@@ -201,6 +211,7 @@ func TestDecryptFile_InvalidCiphertext(t *testing.T) {
 
 func TestDecryptFile_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	key := make([]byte, 32)
 	nonce := make([]byte, 12)
 	plaintext := []byte("test data for decryption")
@@ -208,13 +219,13 @@ func TestDecryptFile_Success(t *testing.T) {
 	// Encrypt first
 	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
 
-	err := EncryptFile(fs, "/input.txt", "/encrypted.enc", key, nonce)
+	err := svc.EncryptFile("/input.txt", "/encrypted.enc", key, nonce)
 	if err != nil {
 		t.Fatalf("encryption failed: %v", err)
 	}
 
 	// Then decrypt
-	err = DecryptFile(fs, "/encrypted.enc", "/decrypted.txt", key, nonce)
+	err = svc.DecryptFile("/encrypted.enc", "/decrypted.txt", key, nonce)
 	if err != nil {
 		t.Fatalf("decryption failed: %v", err)
 	}
@@ -232,6 +243,7 @@ func TestDecryptFile_Success(t *testing.T) {
 
 func TestEncryptDecrypt_RoundTrip(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	key := []byte("this-is-a-32-byte-key-for-test!!")
 	nonce := []byte("12-byte-nonc")
 
@@ -253,12 +265,12 @@ func TestEncryptDecrypt_RoundTrip(t *testing.T) {
 
 			afero.WriteFile(fs, inputPath, tc.data, 0o644)
 
-			err := EncryptFile(fs, inputPath, encPath, key, nonce)
+			err := svc.EncryptFile(inputPath, encPath, key, nonce)
 			if err != nil {
 				t.Fatalf("encryption failed: %v", err)
 			}
 
-			err = DecryptFile(fs, encPath, decPath, key, nonce)
+			err = svc.DecryptFile(encPath, decPath, key, nonce)
 			if err != nil {
 				t.Fatalf("decryption failed: %v", err)
 			}
@@ -273,6 +285,7 @@ func TestEncryptDecrypt_RoundTrip(t *testing.T) {
 
 func TestEncryptDecrypt_DifferentKeysOrNonces(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	key1 := make([]byte, 32)
 	key2 := make([]byte, 32)
 	key2[0] = 1 // Different key
@@ -282,13 +295,13 @@ func TestEncryptDecrypt_DifferentKeysOrNonces(t *testing.T) {
 	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
 
 	// Encrypt with key1
-	err := EncryptFile(fs, "/input.txt", "/encrypted.enc", key1, nonce)
+	err := svc.EncryptFile("/input.txt", "/encrypted.enc", key1, nonce)
 	if err != nil {
 		t.Fatalf("encryption failed: %v", err)
 	}
 
 	// Try to decrypt with key2 - should fail
-	err = DecryptFile(fs, "/encrypted.enc", "/decrypted.txt", key2, nonce)
+	err = svc.DecryptFile("/encrypted.enc", "/decrypted.txt", key2, nonce)
 	if err == nil {
 		t.Error("expected error when decrypting with wrong key")
 	}
