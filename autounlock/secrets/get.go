@@ -286,5 +286,9 @@ type unraidVerifier interface {
 }
 
 func shouldAbort(unraidSvc unraidVerifier, test bool) bool {
-	return (unraidSvc.VerifyArrayStatus("Started")) && !test
+	if test || unraidSvc == nil {
+		return false
+	}
+
+	return unraidSvc.VerifyArrayStatus("Started")
 }
