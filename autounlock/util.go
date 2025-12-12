@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/unraid"
 	"github.com/manifoldco/promptui"
 	"github.com/rclone/rclone/fs/config/obscure"
 	"github.com/rs/zerolog"
@@ -37,6 +35,7 @@ func (a *AutoUnlock) ObscureSecretFromStdin() error {
 	return nil
 }
 
+// InitializeLogging sets up the logging configuration.
 func (a *AutoUnlock) InitializeLogging() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
@@ -61,12 +60,13 @@ func (a *AutoUnlock) InitializeLogging() {
 	}
 }
 
+// Prechecks verifies the system is ready for auto-unlock operations.
 func (a *AutoUnlock) Prechecks() error {
-	if !unraid.IsUnraid(a.fs) {
+	if !a.unraid.IsUnraid() {
 		return errors.New("not running on Unraid")
 	}
 
-	err := unraid.WaitForVarIni(a.fs)
+	err := a.unraid.WaitForVarIni()
 	if err != nil {
 		return fmt.Errorf("failed to wait for var.ini: %w", err)
 	}
@@ -74,6 +74,7 @@ func (a *AutoUnlock) Prechecks() error {
 	return nil
 }
 
+// RemoveKeyfile safely removes the keyfile from the filesystem.
 func (a *AutoUnlock) RemoveKeyfile() {
 	// Remove keyfile
 	err := a.fs.Remove(a.args.KeyFile)
@@ -92,6 +93,7 @@ func (a *AutoUnlock) RemoveKeyfile() {
 	log.Info().Str("keyfile", a.args.KeyFile).Msg("Removed keyfile")
 }
 
+// TestPath tests access to a given path.
 func (a *AutoUnlock) TestPath() error {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
@@ -106,12 +108,12 @@ func (a *AutoUnlock) TestPath() error {
 
 	log.Info().Msg("Retrieved share from remote server")
 
-	appState, err := state.ReadStateFromFile(a.fs, a.args.State)
+	appState, err := a.state.ReadStateFromFile(a.args.State)
 	if err != nil {
 		return fmt.Errorf("failed to read state from file: %w", err)
 	}
 
-	_, err = secrets.GetShare(shareStr, appState.SigningKey)
+	_, err = a.secrets.GetShare(shareStr, appState.SigningKey)
 	if err != nil {
 		return fmt.Errorf("failed to decode/verify share: %w", err)
 	}
@@ -121,6 +123,7 @@ func (a *AutoUnlock) TestPath() error {
 	return nil
 }
 
+// ResetConfiguration resets the auto-unlock configuration.
 func (a *AutoUnlock) ResetConfiguration() error {
 	if !a.args.Reset.Force {
 		prompt := promptui.Prompt{

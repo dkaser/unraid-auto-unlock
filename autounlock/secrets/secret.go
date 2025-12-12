@@ -8,8 +8,20 @@ import (
 	secretsharing "github.com/bytemare/secret-sharing"
 	"github.com/bytemare/secret-sharing/keys"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
+	"github.com/spf13/afero"
 )
 
+// Service provides secret sharing operations.
+type Service struct {
+	fs afero.Fs
+}
+
+// NewService creates a new secrets service.
+func NewService(fs afero.Fs) *Service {
+	return &Service{fs: fs}
+}
+
+// SharedSecret represents a shared secret with all its components.
 type SharedSecret struct {
 	VerificationKey []byte
 	SigningKey      []byte
@@ -18,7 +30,8 @@ type SharedSecret struct {
 	Nonce           []byte
 }
 
-func CreateSecret(threshold uint16, shares uint16) (SharedSecret, error) {
+// CreateSecret creates a new shared secret.
+func (s *Service) CreateSecret(threshold uint16, shares uint16) (SharedSecret, error) {
 	secret := SharedSecret{}
 
 	// Then, split the secret into shares using the specified threshold and number of shares.
@@ -60,7 +73,8 @@ func CreateSecret(threshold uint16, shares uint16) (SharedSecret, error) {
 	return secret, nil
 }
 
-func CombineSecret(shares []*keys.KeyShare) ([]byte, error) {
+// CombineSecret combines shares to reconstruct the secret.
+func (s *Service) CombineSecret(shares []*keys.KeyShare) ([]byte, error) {
 	recovered, err := secretsharing.CombineShares(shares)
 	if err != nil {
 		return nil, fmt.Errorf("failed to combine shares: %w", err)
@@ -69,7 +83,8 @@ func CombineSecret(shares []*keys.KeyShare) ([]byte, error) {
 	return recovered.Encode(), nil
 }
 
-func GetShare(shareStr string, signingKey []byte) (*keys.KeyShare, error) {
+// GetShare retrieves and verifies a share.
+func (s *Service) GetShare(shareStr string, signingKey []byte) (*keys.KeyShare, error) {
 	decodedShareBytes, err := base64.StdEncoding.DecodeString(shareStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode base64 share: %w", err)

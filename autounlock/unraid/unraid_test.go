@@ -19,29 +19,32 @@ import (
 
 func TestIsUnraid_True(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	_ = afero.WriteFile(fs, "/etc/unraid-version", []byte("6.12.0"), 0o644)
 
-	if !IsUnraid(fs) {
+	if !svc.IsUnraid() {
 		t.Error("IsUnraid should return true when /etc/unraid-version exists")
 	}
 }
 
 func TestIsUnraid_False(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 
-	if IsUnraid(fs) {
+	if svc.IsUnraid() {
 		t.Error("IsUnraid should return false when /etc/unraid-version does not exist")
 	}
 }
 
 func TestGetFsState_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	varIniContent := `fsState=Started
 mdState=STARTED
 `
 	_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(varIniContent), 0o644)
 
-	fsState, err := GetFsState(fs)
+	fsState, err := svc.GetFsState()
 	if err != nil {
 		t.Errorf("GetFsState should not return error: %v", err)
 	}
@@ -53,8 +56,9 @@ mdState=STARTED
 
 func TestGetFsState_FileNotFound(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 
-	_, err := GetFsState(fs)
+	_, err := svc.GetFsState()
 	if err == nil {
 		t.Error("GetFsState should return error when var.ini does not exist")
 	}
@@ -62,11 +66,12 @@ func TestGetFsState_FileNotFound(t *testing.T) {
 
 func TestGetFsState_NoFsState(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	varIniContent := `mdState=STARTED
 `
 	_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(varIniContent), 0o644)
 
-	fsState, err := GetFsState(fs)
+	fsState, err := svc.GetFsState()
 	if err != nil {
 		t.Errorf("GetFsState should not return error: %v", err)
 	}
@@ -81,52 +86,57 @@ func TestGetFsState_NoFsState(t *testing.T) {
 
 func TestVerifyArrayStatus_Match(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	varIniContent := `fsState=Started
 `
 	_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(varIniContent), 0o644)
 
-	if !VerifyArrayStatus(fs, "Started") {
+	if !svc.VerifyArrayStatus("Started") {
 		t.Error("VerifyArrayStatus should return true when status matches")
 	}
 }
 
 func TestVerifyArrayStatus_CaseInsensitive(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	varIniContent := `fsState=Started
 `
 	_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(varIniContent), 0o644)
 
-	if !VerifyArrayStatus(fs, "started") {
+	if !svc.VerifyArrayStatus("started") {
 		t.Error("VerifyArrayStatus should be case insensitive")
 	}
 }
 
 func TestVerifyArrayStatus_NoMatch(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	varIniContent := `fsState=Stopped
 `
 	_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(varIniContent), 0o644)
 
-	if VerifyArrayStatus(fs, "Started") {
+	if svc.VerifyArrayStatus("Started") {
 		t.Error("VerifyArrayStatus should return false when status does not match")
 	}
 }
 
 func TestVerifyArrayStatus_FileNotFound(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 
-	if VerifyArrayStatus(fs, "Started") {
+	if svc.VerifyArrayStatus("Started") {
 		t.Error("VerifyArrayStatus should return false when var.ini does not exist")
 	}
 }
 
 func TestWaitForVarIni_AlreadyReady(t *testing.T) {
 	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
 	varIniContent := `fsState=Stopped
 `
 	_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(varIniContent), 0o644)
 
-	err := WaitForVarIni(fs)
+	err := svc.WaitForVarIni()
 	if err != nil {
 		t.Errorf("WaitForVarIni should not return error when var.ini is ready: %v", err)
 	}

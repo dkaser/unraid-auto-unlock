@@ -15,6 +15,17 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+// Service provides Unraid system operations.
+type Service struct {
+	fs afero.Fs
+}
+
+// NewService creates a new Unraid service.
+func NewService(fs afero.Fs) *Service {
+	return &Service{fs: fs}
+}
+
+// BlockDevices represents block device information.
 type BlockDevices struct {
 	BlockDevices []struct {
 		Name   string `json:"name"`
@@ -22,13 +33,15 @@ type BlockDevices struct {
 	} `json:"blockdevices"`
 }
 
-func IsUnraid(fs afero.Fs) bool {
-	_, err := fs.Stat("/etc/unraid-version")
+// IsUnraid checks if the system is running Unraid.
+func (s *Service) IsUnraid() bool {
+	_, err := s.fs.Stat("/etc/unraid-version")
 
 	return err == nil
 }
 
-func TestKeyfile(keyfile string) error {
+// TestKeyfile tests if a keyfile can unlock LUKS devices.
+func (s *Service) TestKeyfile(keyfile string) error {
 	log.Info().Str("keyfile", keyfile).Msg("Verifying that key can unlock disks")
 
 	_, err := os.Stat(keyfile)
@@ -87,13 +100,14 @@ func TestKeyfile(keyfile string) error {
 	return errors.New("keyfile could not decrypt any LUKS devices")
 }
 
-func WaitForVarIni(fs afero.Fs) error {
+// WaitForVarIni waits for the var.ini file to be ready.
+func (s *Service) WaitForVarIni() error {
 	deadline := time.Now().Add(constants.ArrayTimeout)
 
 	for {
-		_, err := fs.Stat("/var/local/emhttp/var.ini")
+		_, err := s.fs.Stat("/var/local/emhttp/var.ini")
 		if err == nil {
-			fsState, err := GetFsState(fs)
+			fsState, err := s.GetFsState()
 			if err == nil && fsState != "" {
 				log.Debug().Str("fsState", fsState).Msg("var.ini found and readable")
 
@@ -112,8 +126,9 @@ func WaitForVarIni(fs afero.Fs) error {
 	}
 }
 
-func GetFsState(fs afero.Fs) (string, error) {
-	file, err := fs.Open("/var/local/emhttp/var.ini")
+// GetFsState reads the filesystem state from var.ini.
+func (s *Service) GetFsState() (string, error) {
+	file, err := s.fs.Open("/var/local/emhttp/var.ini")
 	if err != nil {
 		return "", fmt.Errorf("failed to open var.ini: %w", err)
 	}
@@ -130,8 +145,9 @@ func GetFsState(fs afero.Fs) (string, error) {
 	return fsState, nil
 }
 
-func VerifyArrayStatus(fs afero.Fs, status string) bool {
-	fsState, err := GetFsState(fs)
+// VerifyArrayStatus checks if the array has the specified status.
+func (s *Service) VerifyArrayStatus(status string) bool {
+	fsState, err := s.GetFsState()
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Failed to get fsState")
 
@@ -141,13 +157,14 @@ func VerifyArrayStatus(fs afero.Fs, status string) bool {
 	return strings.EqualFold(fsState, status)
 }
 
-func StartArray(fs afero.Fs) error {
+// StartArray starts the Unraid array.
+func (s *Service) StartArray() error {
 	_, err := os.Stat("/root/keyfile")
 	if err != nil {
 		return fmt.Errorf("keyfile not found: %w", err)
 	}
 
-	err = WaitForArrayStatus(fs, "Stopped", constants.ArrayStatusTimeout)
+	err = s.WaitForArrayStatus("Stopped", constants.ArrayStatusTimeout)
 	if err != nil {
 		return fmt.Errorf("array is not stopped: %w", err)
 	}
@@ -169,11 +186,12 @@ func StartArray(fs afero.Fs) error {
 	return nil
 }
 
-func WaitForArrayStatus(fs afero.Fs, status string, timeout time.Duration) error {
+// WaitForArrayStatus waits for the array to reach a specific status.
+func (s *Service) WaitForArrayStatus(status string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 
 	for {
-		if VerifyArrayStatus(fs, status) {
+		if s.VerifyArrayStatus(status) {
 			log.Debug().Str("status", status).Msg("Array has reached status")
 
 			return nil
