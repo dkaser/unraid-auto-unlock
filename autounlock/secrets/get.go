@@ -9,6 +9,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bytemare/secret-sharing/keys"
@@ -138,10 +139,8 @@ func (s *Service) tryGetShare(
 	path string,
 	pathNum int,
 	signingKey []byte,
-	triedPaths map[string]bool,
-	seenShares map[string]bool,
 	serverTimeout time.Duration,
-) (RetrievedShare, error) {
+) (RetrievedShare, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), serverTimeout)
 	defer cancel()
 
@@ -149,34 +148,28 @@ func (s *Service) tryGetShare(
 	if err != nil {
 		log.Debug().Int("path", pathNum).Stack().Err(err).Msg("Failed to fetch share")
 
-		return RetrievedShare{}, err
+		return RetrievedShare{}, false, err
 	}
-
-	triedPaths[path] = true
 
 	share, err := s.GetShare(shareStr, signingKey)
 	if err != nil {
 		log.Debug().Int("path", pathNum).Stack().Err(err).Msg("Failed to get share")
 
-		return RetrievedShare{}, err
+		return RetrievedShare{}, true, err
 	}
 
 	// Use share identifier to detect duplicates
 	shareID := strconv.FormatUint(uint64(share.Identifier()), 10)
-	if seenShares[shareID] {
-		log.Debug().Int("path", pathNum).Msg("Duplicate share, ignoring")
-
-		return RetrievedShare{}, errors.New("duplicate share")
-	}
 
 	log.Info().Int("path", pathNum).Msg("Successfully retrieved share")
 
 	return RetrievedShare{
 		Share:   share,
 		ShareID: shareID,
-	}, nil
+	}, true, nil
 }
 
+//nolint:cyclop,funlen // Complexity and length inherent to share collection with retry logic
 func (s *Service) collectShares(
 	paths []string,
 	appState state.State,
@@ -185,40 +178,68 @@ func (s *Service) collectShares(
 	test bool,
 	unraidSvc unraidVerifier,
 ) ([]*keys.KeyShare, error) {
-	var shares []*keys.KeyShare
-
-	triedPaths := make(map[string]bool)
-	seenShares := make(map[string]bool)
+	var (
+		shares     []*keys.KeyShare
+		mutex      sync.Mutex
+		triedPaths = make(map[string]bool)
+		seenShares = make(map[string]bool)
+	)
 
 	for {
 		if shouldAbort(unraidSvc, test) {
 			return nil, errors.New("array is no longer stopped, aborting share retrieval")
 		}
 
+		var waitGroup sync.WaitGroup
+
 		for pathNum, path := range paths {
 			// Skip paths we've already tried
-			if triedPaths[path] {
+			mutex.Lock()
+
+			alreadyTried := triedPaths[path]
+
+			mutex.Unlock()
+
+			if alreadyTried {
 				continue
 			}
 
-			retrievedShare, err := s.tryGetShare(
-				path,
-				pathNum,
-				appState.SigningKey,
-				triedPaths,
-				seenShares,
-				serverTimeout,
-			)
-			if err != nil {
-				continue
-			}
+			waitGroup.Go(func() {
+				retrievedShare, fetchSucceeded, err := s.tryGetShare(
+					path,
+					pathNum,
+					appState.SigningKey,
+					serverTimeout,
+				)
 
-			shares = append(shares, retrievedShare.Share)
-			seenShares[retrievedShare.ShareID] = true
+				mutex.Lock()
+				defer mutex.Unlock()
 
-			if len(shares) >= int(appState.Threshold) && !test {
-				return shares, nil
-			}
+				// Only mark as tried if fetch succeeded (don't retry corrupt shares)
+				if fetchSucceeded {
+					triedPaths[path] = true
+				}
+
+				if err != nil {
+					return
+				}
+
+				// Check for duplicate shares
+				if seenShares[retrievedShare.ShareID] {
+					log.Debug().Int("path", pathNum).Msg("Duplicate share, ignoring")
+
+					return
+				}
+
+				shares = append(shares, retrievedShare.Share)
+				seenShares[retrievedShare.ShareID] = true
+			})
+		}
+
+		waitGroup.Wait()
+
+		if len(shares) >= int(appState.Threshold) && !test {
+			return shares, nil
 		}
 
 		// Check if all paths have been tried
