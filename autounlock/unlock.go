@@ -64,9 +64,14 @@ func (a *AutoUnlock) Unlock() error {
 
 	err = a.unraid.StartArray()
 	if err != nil {
-		// Wait 30 seconds and try again once
 		log.Warn().Err(err).Msg("Failed to start array, retrying in 30 seconds")
 		time.Sleep(constants.StartRetryDelay)
+
+		// Check if array is already started before retrying
+		started := a.unraid.VerifyArrayStatus("Started")
+		if started {
+			return nil
+		}
 
 		err = a.unraid.StartArray()
 		if err != nil {
