@@ -1,9 +1,14 @@
 package unraid
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -145,6 +150,29 @@ func (s *Service) GetFsState() (string, error) {
 	return fsState, nil
 }
 
+// GetCsrfToken reads the csrf token from var.ini.
+func (s *Service) GetCsrfToken() (string, error) {
+	file, err := s.fs.Open("/var/local/emhttp/var.ini")
+	if err != nil {
+		return "", fmt.Errorf("failed to open var.ini: %w", err)
+	}
+	defer file.Close()
+
+	cfg, err := ini.Load(file)
+	if err != nil {
+		return "", fmt.Errorf("failed to read var.ini: %w", err)
+	}
+
+	csrfToken := cfg.Section("").Key("csrf_token").String()
+	log.Debug().Bool("hasCsrfToken", csrfToken != "").Msg("Read csrf token from var.ini")
+
+	if csrfToken == "" {
+		return "", errors.New("csrf token is empty")
+	}
+
+	return csrfToken, nil
+}
+
 // VerifyArrayStatus checks if the array has the specified status.
 func (s *Service) VerifyArrayStatus(status string) bool {
 	fsState, err := s.GetFsState()
@@ -171,17 +199,17 @@ func (s *Service) StartArray() error {
 
 	log.Info().Msg("Starting array")
 
-	osCmd := "/usr/local/sbin/emcmd"
-	args := []string{"startState=STOPPED&cmdStart=Start"}
+	// Prepare the command parameters
+	params := url.Values{}
+	params.Set("startState", "STOPPED")
+	params.Set("cmdStart", "Start")
 
-	cmd := exec.Command(osCmd, args...)
-
-	output, err := cmd.CombinedOutput()
+	response, err := s.emhttpdCommand(params)
 	if err != nil {
-		return fmt.Errorf("failed to start array: %w, output: %s", err, string(output))
+		return fmt.Errorf("failed to start array: %w", err)
 	}
 
-	log.Info().Msg("Array started successfully")
+	log.Info().Str("response", response).Msg("Array started successfully")
 
 	return nil
 }
@@ -202,9 +230,68 @@ func (s *Service) WaitForArrayStatus(status string, timeout time.Duration) error
 		}
 
 		log.Debug().
-			Str("status", status).
+			Str("desiredStatus", status).
 			Int("delaySeconds", int(constants.ArrayRetryDelay.Seconds())).
 			Msg("Array has not reached status yet, retrying")
 		time.Sleep(constants.ArrayRetryDelay)
 	}
+}
+
+// emhttpdCommand sends a command to emhttpd via Unix socket.
+func (s *Service) emhttpdCommand(params url.Values) (string, error) {
+	csrfToken, err := s.GetCsrfToken()
+	if err != nil {
+		return "", fmt.Errorf("failed to get CSRF token: %w", err)
+	}
+
+	// Add CSRF token to parameters
+	params.Set("csrf_token", csrfToken)
+
+	// Create HTTP client that communicates over Unix socket
+	client := &http.Client{
+		Timeout: constants.ArrayStatusTimeout,
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+				d := net.Dialer{}
+
+				return d.DialContext(ctx, "unix", "/var/run/emhttpd.socket")
+			},
+		},
+	}
+
+	// Make the request
+	req, err := http.NewRequest(
+		http.MethodPost,
+		"http://localhost/update",
+		strings.NewReader(params.Encode()),
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute command: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf(
+			"command failed: status %d, body: %s",
+			resp.StatusCode,
+			string(body),
+		)
+	}
+
+	// Check if there's an error in the response body
+	responseText := strings.TrimSpace(string(body))
+
+	return responseText, nil
 }

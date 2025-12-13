@@ -21,9 +21,14 @@ func main() {
 
 	autoUnlock, err := NewAutoUnlock(fs, args)
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("Failed to initialize AutoUnlock")
-		os.Exit(1)
+		log.Fatal().Stack().Err(err).Msg("Failed to initialize AutoUnlock")
 	}
+
+	lockFile, err := lockApp()
+	if err != nil {
+		log.Fatal().Stack().Err(err).Msg("Another instance of the application is already running")
+	}
+	defer lockFile.Close()
 
 	switch {
 	case args.Reset != nil:
@@ -39,7 +44,7 @@ func main() {
 	}
 
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("Failed to execute command")
-		os.Exit(1)
+		lockFile.Close()
+		log.Fatal().Stack().Err(err).Msg("Failed to execute command") //nolint:gocritic
 	}
 }

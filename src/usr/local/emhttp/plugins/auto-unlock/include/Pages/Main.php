@@ -25,8 +25,9 @@ if ( ! defined(__NAMESPACE__ . '\PLUGIN_ROOT') || ! defined(__NAMESPACE__ . '\PL
     throw new \RuntimeException("Common file not loaded.");
 }
 
-$tr        = $tr ?? new Translator(PLUGIN_ROOT);
-$csrfToken = Utils::getCsrfToken();
+$tr           = $tr ?? new Translator(PLUGIN_ROOT);
+$csrfToken    = Utils::getCsrfToken();
+$arrayStopped = Utils::isArrayStopped();
 ?>
 
 <div class="output_display" style="display:none;">
@@ -37,6 +38,63 @@ $csrfToken = Utils::getCsrfToken();
     <pre id="command_output"></pre>
     <input type="button" id="continue_button" disabled onclick="location.reload()" value="<?= $tr->tr("continue"); ?>" />
 </div>
+
+<script type="text/javascript">
+    async function streamToOutput(response, outputId) {
+        const outputEl = document.getElementById(outputId);
+        if (!outputEl) {
+            console.error('Output element not found:', outputId);
+            return;
+        }
+
+        let output = '';
+        
+        // Check if streaming is supported and available
+        if (!response.body || typeof response.body.getReader !== 'function') {
+            // Fallback to non-streaming response.text()
+            try {
+                output = await response.text();
+                outputEl.textContent = output;
+            } catch (error) {
+                console.error('Error reading response:', error);
+                outputEl.textContent = 'Error reading response: ' + error.message;
+            }
+            return;
+        }
+        
+        // Attempt streaming
+        try {
+            const reader = response.body.getReader();
+            let decoder = new TextDecoder();
+            outputEl.textContent = '';
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                output += chunk;
+                outputEl.textContent = output;
+            }
+            
+            // Flush any remaining buffered bytes
+            const finalChunk = decoder.decode();
+            if (finalChunk) {
+                output += finalChunk;
+                outputEl.textContent = output;
+            }
+        } catch (error) {
+            // If streaming fails, fall back to response.text()
+            console.error('Streaming failed, falling back to text():', error);
+            try {
+                output = await response.text();
+                outputEl.textContent = output;
+            } catch (textError) {
+                console.error('Error reading response text:', textError);
+                outputEl.textContent = (output || '') + '\nError reading response: ' + textError.message;
+            }
+        }
+    }
+</script>
 
 <?php
 // Show initialize section if /boot/config/plugins/auto-unlock/state.json or /boot/config/plugins/auto-unlock/unlock.enc do not exist
@@ -88,7 +146,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
             'shares_total': sharesTotal,
             'shares_unlock': sharesUnlock,
             'keyfile_data': keyfileContent,
-            'csrf_token': '<?= $csrfToken; ?>'
+            'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
         try {
@@ -96,9 +154,8 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
                 method: 'POST',
                 body: formData,
                 signal: AbortSignal.timeout(30000)
-            })
-
-            document.getElementById('command_output').textContent = await response.text();
+            });
+            await streamToOutput(response, 'command_output');
             document.querySelector('.share_instructions').style.display = 'block';
             document.getElementById('continue_button').disabled = false;
         } catch (error) {
@@ -182,7 +239,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
         const formData = new URLSearchParams({
             'test_path': testPathValue,
-            'csrf_token': '<?= $csrfToken; ?>'
+            'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
         try {
@@ -191,9 +248,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
                 body: formData,
                 signal: AbortSignal.timeout(20000)
             });
-
-            const result = await response.text();
-            document.getElementById('command_output').textContent = result;
+            await streamToOutput(response, 'command_output');
         } catch (error) {
             document.getElementById('command_output').textContent = 'Error during path test: ' + error.message;
         }
@@ -205,7 +260,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
         const formData = new URLSearchParams({
             'obscure_value': obscureValue,
-            'csrf_token': '<?= $csrfToken; ?>'
+            'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
         try {
@@ -224,7 +279,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
     async function testConfig() {
         const formData = new URLSearchParams({
-            'csrf_token': '<?= $csrfToken; ?>'
+            'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
         document.querySelector('.output_display').style.display = 'block';
@@ -237,11 +292,31 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
                 body: formData,
                 signal: AbortSignal.timeout(60000)
             });
-
-            const result = await response.text();
-            document.getElementById('command_output').textContent = result;
+            await streamToOutput(response, 'command_output');
         } catch (error) {
             document.getElementById('command_output').textContent = 'Error during configuration test: ' + error.message;
+        }
+        document.getElementById('continue_button').disabled = false;
+    }
+
+    async function unlockArray() {
+        const formData = new URLSearchParams({
+            'csrf_token': <?= json_encode($csrfToken); ?>
+        });
+
+        document.querySelector('.output_display').style.display = 'block';
+        document.querySelector('.config_forms').style.display = 'none';
+        document.getElementById('command_output').textContent = "Unlocking array... Please wait.";
+
+        try {
+            const response = await fetch('/plugins/auto-unlock/action.php/open', {
+                method: 'POST',
+                body: formData,
+                signal: AbortSignal.timeout(360000)
+            });
+            await streamToOutput(response, 'command_output');
+        } catch (error) {
+            document.getElementById('command_output').textContent = 'Error during array unlock: ' + error.message;
         }
         document.getElementById('continue_button').disabled = false;
     }
@@ -269,6 +344,14 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 	</dd></dl>
 
 </form>
+
+<table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("unlock_array"); ?></td></tr></thead></table>
+<dl>
+    <dt><?= $tr->tr("unlock_array"); ?></dt>
+    <dd>
+        <input type="button" id="unlock_array_button" name="unlock_array_button" value="<?= $tr->tr("unlock_array"); ?>" onclick="unlockArray()" <?= $arrayStopped ? '' : 'disabled'; ?> />
+    </dd>
+</dl>
 
 <table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("test_path"); ?></td></tr></thead></table>
 <dl>

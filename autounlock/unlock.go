@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
@@ -8,9 +9,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Unlock decrypts the keyfile and starts the array.
+//nolint:cyclop,funlen // Unlock decrypts the keyfile and starts the array.
 func (a *AutoUnlock) Unlock() error {
 	if !a.args.Unlock.Test {
+		started := a.unraid.VerifyArrayStatus("Started")
+		if started {
+			return errors.New("array is already started, aborting unlock")
+		}
+
 		err := a.unraid.WaitForArrayStatus("Stopped", constants.ArrayStatusTimeout)
 		if err != nil {
 			return fmt.Errorf("failed to verify array stopped: %w", err)
