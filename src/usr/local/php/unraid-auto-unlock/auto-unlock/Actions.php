@@ -41,12 +41,7 @@ class Actions
         try {
             $process->start();
             while ($process->isRunning()) {
-                $out = $process->getIncrementalOutput();
                 $err = $process->getIncrementalErrorOutput();
-                if ($out) {
-                    echo $out;
-                    flush();
-                }
                 if ($err) {
                     echo $err;
                     flush();
@@ -63,14 +58,15 @@ class Actions
         // Final output after process ends
         $out = $process->getIncrementalOutput();
         $err = $process->getIncrementalErrorOutput();
-        if ($out) {
-            echo $out;
-            flush();
-        }
         if ($err) {
             echo $err;
             flush();
         }
+        if ($out) {
+            echo $out;
+            flush();
+        }
+
         if ($process->isTerminated() && $process->getExitCode() === 143 && $timeoutMsg) {
             echo $timeoutMsg;
             flush();
