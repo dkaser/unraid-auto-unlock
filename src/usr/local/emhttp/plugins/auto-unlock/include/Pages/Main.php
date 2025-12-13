@@ -39,6 +39,22 @@ $arrayStopped = Utils::isArrayStopped();
     <input type="button" id="continue_button" disabled onclick="location.reload()" value="<?= $tr->tr("continue"); ?>" />
 </div>
 
+<script type="text/javascript">
+    async function streamToOutput(response, outputId) {
+        const reader = response.body.getReader();
+        let decoder = new TextDecoder();
+        let output = '';
+        document.getElementById(outputId).textContent = '';
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            output += chunk;
+            document.getElementById(outputId).textContent = output;
+        }
+    }
+</script>
+
 <?php
 // Show initialize section if /boot/config/plugins/auto-unlock/state.json or /boot/config/plugins/auto-unlock/unlock.enc do not exist
 if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
@@ -97,9 +113,8 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
                 method: 'POST',
                 body: formData,
                 signal: AbortSignal.timeout(30000)
-            })
-
-            document.getElementById('command_output').textContent = await response.text();
+            });
+            await streamToOutput(response, 'command_output');
             document.querySelector('.share_instructions').style.display = 'block';
             document.getElementById('continue_button').disabled = false;
         } catch (error) {
@@ -192,9 +207,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
                 body: formData,
                 signal: AbortSignal.timeout(20000)
             });
-
-            const result = await response.text();
-            document.getElementById('command_output').textContent = result;
+            await streamToOutput(response, 'command_output');
         } catch (error) {
             document.getElementById('command_output').textContent = 'Error during path test: ' + error.message;
         }
@@ -238,9 +251,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
                 body: formData,
                 signal: AbortSignal.timeout(60000)
             });
-
-            const result = await response.text();
-            document.getElementById('command_output').textContent = result;
+            await streamToOutput(response, 'command_output');
         } catch (error) {
             document.getElementById('command_output').textContent = 'Error during configuration test: ' + error.message;
         }
@@ -262,9 +273,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
                 body: formData,
                 signal: AbortSignal.timeout(120000)
             });
-
-            const result = await response.text();
-            document.getElementById('command_output').textContent = result;
+            await streamToOutput(response, 'command_output');
         } catch (error) {
             document.getElementById('command_output').textContent = 'Error during array unlock: ' + error.message;
         }

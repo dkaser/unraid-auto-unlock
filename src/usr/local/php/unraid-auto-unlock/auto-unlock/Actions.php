@@ -4,6 +4,7 @@ namespace AutoUnlock;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\StreamInterface as StreamInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -26,11 +27,75 @@ use Symfony\Component\Process\Process;
 
 class Actions
 {
+    /**
+     * Stream a Symfony Process output directly via echo, bypassing Slim's buffering.
+     * Uses getIncrementalOutput and disables output buffering for true streaming.
+     * MUST call sendStreamHeaders() before calling this function.
+     */
+    private static function streamProcess(Process $process, string $startMsg = null, string $timeoutMsg = null): int
+    {
+        if ($startMsg) {
+            echo $startMsg;
+            flush();
+        }
+        $process->start();
+        while ($process->isRunning()) {
+            $out = $process->getIncrementalOutput();
+            $err = $process->getIncrementalErrorOutput();
+            if ($out) {
+                echo $out;
+                flush();
+            }
+            if ($err) {
+                echo $err;
+                flush();
+            }
+            usleep(100000); // 0.1s
+        }
+        // Final output after process ends
+        $out = $process->getIncrementalOutput();
+        $err = $process->getIncrementalErrorOutput();
+        if ($out) {
+            echo $out;
+            flush();
+        }
+        if ($err) {
+            echo $err;
+            flush();
+        }
+        if ($process->isTerminated() && $process->getExitCode() === 143 && $timeoutMsg) {
+            echo $timeoutMsg;
+            flush();
+        }
+        return $process->getExitCode() ?? -1;
+    }
+
+    /**
+     * Send headers and disable output buffering for streaming responses.
+     * Call this before using streamProcess and then exit after streaming.
+     */
+    private static function sendStreamHeaders(): void
+    {
+        // Disable all output buffering
+        while (@ob_end_flush());
+        ini_set('output_buffering', 'off');
+        ini_set('zlib.output_compression', 0);
+
+        // Send headers for streaming
+        header('Content-Type: text/plain');
+        header('Cache-Control: no-cache');
+        header('X-Accel-Buffering: no'); // For nginx
+        flush();
+    }
+
     public const BIN_PATH = '/usr/local/php/unraid-auto-unlock/bin/autounlock';
 
     public static function Unlock(Request $request, Response $response): Response
     {
-        $responseBody = "Checking for existing unlock processes" . PHP_EOL;
+        self::sendStreamHeaders();
+
+        echo "Checking for existing unlock processes\n";
+        flush();
         // First, find and kill any running unlock processes
         $findProcess = new Process(['pgrep', '-f', self::BIN_PATH]);
         $findProcess->run();
@@ -38,19 +103,20 @@ class Actions
             $pids = explode(PHP_EOL, trim($findProcess->getOutput()));
             foreach ($pids as $pid) {
                 if (is_numeric($pid)) {
-                    $responseBody .= "Terminating existing unlock process with PID: {$pid}" . PHP_EOL;
+                    echo "Terminating existing unlock process with PID: {$pid}\n";
+                    flush();
                     $killProcess = new Process(['kill', $pid]);
                     $killProcess->run();
                 }
             }
-            sleep(1); // Give some time for processes to terminate
+            sleep(5); // Give some time for processes to terminate
         }
 
         $findProcess->run();
         if ($findProcess->isSuccessful()) {
-            $responseBody .= "Error: Unable to terminate existing unlock processes." . PHP_EOL;
-            $response->getBody()->write($responseBody);
-            return $response->withHeader('Content-Type', 'text/plain')->withStatus(500);
+            echo "Error: Unable to terminate existing unlock processes.\n";
+            flush();
+            exit(1);
         }
 
         $process = new Process([
@@ -59,31 +125,24 @@ class Actions
             '--pretty'
         ]);
         $process->setTimeout(60);
-
-        try {
-            $process->run();
-            $timedOut = false;
-        } catch (\Symfony\Component\Process\Exception\ProcessTimedOutException $e) {
-            $timedOut = true;
-        }
-
-        $responseBody .= "Unlocking Drives" . PHP_EOL;
-        if ($timedOut) {
-            $responseBody .= "Result: TIMEOUT (exceeded 120 seconds)" . PHP_EOL;
-        } elseif ( ! $process->isSuccessful()) {
-            $responseBody .= "Result: FAIL" . PHP_EOL;
+        $exitCode = self::streamProcess(
+            $process,
+            "Unlocking Drives\n",
+            "Result: TIMEOUT (exceeded 120 seconds)\n"
+        );
+        if ($exitCode === 0) {
+            echo "Result: SUCCESS\n";
         } else {
-            $responseBody .= "Result: SUCCESS" . PHP_EOL;
+            echo "Result: FAIL\n";
         }
-
-        $responseBody .= PHP_EOL . "Log:" . PHP_EOL . $process->getErrorOutput();
-
-        $response->getBody()->write($responseBody);
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+        flush();
+        exit(0);
     }
 
     public static function Test(Request $request, Response $response): Response
     {
+        self::sendStreamHeaders();
+
         $process = new Process([
             self::BIN_PATH,
             'unlock',
@@ -91,19 +150,17 @@ class Actions
             '--debug',
             '--test'
         ]);
-        $process->run();
-
-        $responseBody = "Testing Configuration" . PHP_EOL;
-        if ( ! $process->isSuccessful()) {
-            $responseBody .= "Result: FAIL" . PHP_EOL;
+        $exitCode = self::streamProcess(
+            $process,
+            "Testing Configuration\n"
+        );
+        if ($exitCode === 0) {
+            echo "Result: SUCCESS\n";
         } else {
-            $responseBody .= "Result: SUCCESS" . PHP_EOL;
+            echo "Result: FAIL\n";
         }
-
-        $responseBody .= PHP_EOL . "Log:" . PHP_EOL . $process->getErrorOutput();
-
-        $response->getBody()->write($responseBody);
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+        flush();
+        exit(0);
     }
 
     public static function Remove(Request $request, Response $response): Response
@@ -145,6 +202,7 @@ class Actions
     public static function Initialize(Request $request, Response $response): Response
     {
         $data = (array) $request->getParsedBody();
+        $body = $response->getBody();
 
         $sharesTotal  = isset($data['shares_total']) ? (int) $data['shares_total'] : 5;
         $sharesUnlock = isset($data['shares_unlock']) ? (int) $data['shares_unlock'] : 3;
@@ -154,32 +212,31 @@ class Actions
         $keyFileContent = end($keyFileParts) ?: '';
 
         if (empty($keyFileContent)) {
-            $response->getBody()->write("Error: No keyfile provided.");
-            return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
+            $body->write("Error: No keyfile provided.");
+            return $response->withStatus(400);
         }
 
         if ($sharesUnlock < 1 || $sharesTotal < 1 || $sharesUnlock > $sharesTotal || $sharesTotal > 100 || $sharesUnlock > 100) {
-            $response->getBody()->write("Error: Invalid share configuration.");
-            return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
+            $body->write("Error: Invalid share configuration.");
+            return $response->withStatus(400);
         }
 
         $decodedKeyfile = base64_decode($keyFileContent, true);
         if ($decodedKeyfile === false) {
-            $response->getBody()->write("Error: Invalid keyfile encoding.");
-            return $response->withHeader('Content-Type', 'text/plain')->withStatus(400);
+            $body->write("Error: Invalid keyfile encoding.");
+            return $response->withStatus(400);
         }
 
         if (file_put_contents('/root/keyfile', $decodedKeyfile) === false) {
-            $response->getBody()->write("Error: Unable to write temporary keyfile.");
-            return $response->withHeader('Content-Type', 'text/plain')->withStatus(500);
+            $body->write("Error: Unable to write temporary keyfile.");
+            return $response->withStatus(500);
         }
+
+        self::sendStreamHeaders();
         if ( ! chmod('/root/keyfile', 0600)) {
-            $response->getBody()->write("Notice: Unable to set permissions on temporary keyfile.");
+            echo "Notice: Unable to set permissions on temporary keyfile.";
         }
-
         $process = null;
-        $result  = "Error during initialization.";
-
         try {
             $process = new Process([
                 self::BIN_PATH,
@@ -188,10 +245,14 @@ class Actions
                 '--shares', $sharesTotal,
                 '--threshold', $sharesUnlock
             ]);
-            $process->run();
-
-            if ($process->isSuccessful()) {
-                $result = $process->getOutput();
+            $exitCode = self::streamProcess(
+                $process,
+                "Initializing...\n"
+            );
+            if ($exitCode === 0) {
+                echo "Result: SUCCESS\n";
+            } else {
+                echo "Result: FAIL\n";
             }
         } finally {
             // Clean up temporary keyfile if it still exists
@@ -199,14 +260,14 @@ class Actions
                 unlink('/root/keyfile');
             }
         }
-
-        $responseBody = $result . PHP_EOL . PHP_EOL . "Log:" . PHP_EOL . $process->getErrorOutput();
-        $response->getBody()->write($responseBody);
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+        flush();
+        exit(0);
     }
 
     public static function TestPath(Request $request, Response $response): Response
     {
+        self::sendStreamHeaders();
+
         $data     = (array) $request->getParsedBody();
         $testPath = $data['test_path'] ?? '';
 
@@ -217,18 +278,16 @@ class Actions
             '--debug',
             $testPath
         ]);
-        $process->run();
-
-        $responseBody = "Testing path: {$testPath}" . PHP_EOL;
-        if ( ! $process->isSuccessful()) {
-            $responseBody .= "Result: FAIL" . PHP_EOL;
+        $exitCode = self::streamProcess(
+            $process,
+            "Testing path: {$testPath}\n"
+        );
+        if ($exitCode === 0) {
+            echo "Result: SUCCESS\n";
         } else {
-            $responseBody .= "Result: SUCCESS" . PHP_EOL;
+            echo "Result: FAIL\n";
         }
-
-        $responseBody .= PHP_EOL . "Log:" . PHP_EOL . $process->getErrorOutput();
-
-        $response->getBody()->write($responseBody);
-        return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+        flush();
+        exit(0);
     }
 }

@@ -5,6 +5,8 @@ namespace AutoUnlock;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
+use Slim\Middleware\OutputBufferingMiddleware;
+use Slim\Psr7\Factory\StreamFactory;
 
 /*
     Copyright (C) 2025  Derek Kaser
@@ -33,6 +35,9 @@ if ( ! defined(__NAMESPACE__ . '\PLUGIN_ROOT') || ! defined(__NAMESPACE__ . '\PL
 
 $app = AppFactory::create();
 $app->addRoutingMiddleware();
+
+$streamFactory = new StreamFactory();
+$app->add(new OutputBufferingMiddleware($streamFactory, OutputBufferingMiddleware::APPEND));
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
 $app->post("{$prefix}/remove", function (Request $request, Response $response, $args) {
