@@ -4,7 +4,6 @@ namespace AutoUnlock;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\StreamInterface as StreamInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
@@ -159,9 +158,11 @@ class Actions
             '--debug',
             '--test'
         ]);
+        $process->setTimeout(120);
         $exitCode = self::streamProcess(
             $process,
-            "Testing Configuration\n"
+            "Testing Configuration\n",
+            "Result: TIMEOUT\n"
         );
         if ($exitCode === 0) {
             echo "Result: SUCCESS\n";
@@ -254,9 +255,11 @@ class Actions
                 '--shares', $sharesTotal,
                 '--threshold', $sharesUnlock
             ]);
+            $process->setTimeout(120);
             $exitCode = self::streamProcess(
                 $process,
-                "Initializing...\n"
+                "Initializing...\n",
+                "Result: TIMEOUT\n"
             );
             if ($exitCode === 0) {
                 echo "Result: SUCCESS\n";

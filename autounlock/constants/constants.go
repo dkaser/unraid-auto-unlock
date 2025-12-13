@@ -18,5 +18,5 @@ const (
 	StateDirMode  = 0o700
 
 	LockFile     = "/run/autounlock.lock"
-	LockFileMode = 0o644
+	LockFileMode = 0o600
 )
