@@ -20,5 +20,6 @@
     "not_shown_again": "Dessa andelar kommer inte att visas igen.",
     "obscure": "Dölj",
     "obscure_value": "Dolt värde",
-    "download_locations_instructions": "Ange de platser från vilka insticksmodulen ska hämta nyckeldelarna vid uppstart. Varje plats ska stå på en egen rad. Exempel på format som stöds finns i exemplet nedan:"
+    "download_locations_instructions": "Ange de platser från vilka insticksmodulen ska hämta nyckeldelarna vid uppstart. Varje plats ska stå på en egen rad. Exempel på format som stöds finns i exemplet nedan:",
+    "unlock_array": "Lås upp arrayen"
 }

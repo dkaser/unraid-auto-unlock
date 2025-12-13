@@ -20,5 +20,6 @@
     "not_shown_again": "Essas partes não serão exibidas novamente.",
     "obscure": "Ocultar",
     "obscure_value": "Valor Oculto",
-    "download_locations_instructions": "Especifique os locais de onde o plugin deve recuperar as partes da chave durante a inicialização. Cada local deve estar em sua própria linha. Exemplos de formatos compatíveis podem ser encontrados no exemplo abaixo."
+    "download_locations_instructions": "Especifique os locais de onde o plugin deve recuperar as partes da chave durante a inicialização. Cada local deve estar em sua própria linha. Exemplos de formatos compatíveis podem ser encontrados no exemplo abaixo.",
+    "unlock_array": "Desbloquear Conjunto"
 }
