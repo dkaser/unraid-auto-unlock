@@ -6,6 +6,7 @@ const (
 	ArrayRetryDelay    = 15 * time.Second
 	ArrayStatusTimeout = 120 * time.Second
 	ArrayTimeout       = 15 * time.Minute
+	StartRetryDelay    = 30 * time.Second
 
 	EncryptionKeyBytes = 32
 	EncryptionFileMode = 0o600

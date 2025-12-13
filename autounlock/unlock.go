@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/dkaser/unraid-auto-unlock/autounlock/constants"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
@@ -63,7 +64,14 @@ func (a *AutoUnlock) Unlock() error {
 
 	err = a.unraid.StartArray()
 	if err != nil {
-		return fmt.Errorf("failed to start array: %w", err)
+		// Wait 30 seconds and try again once
+		log.Warn().Err(err).Msg("Failed to start array, retrying in 30 seconds")
+		time.Sleep(constants.StartRetryDelay)
+
+		err = a.unraid.StartArray()
+		if err != nil {
+			return fmt.Errorf("failed to start array: %w", err)
+		}
 	}
 
 	err = a.unraid.WaitForArrayStatus("Started", constants.ArrayTimeout)
