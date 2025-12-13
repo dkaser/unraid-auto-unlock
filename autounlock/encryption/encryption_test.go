@@ -7,9 +7,16 @@ package encryption
 // - Confirm that DecryptFile handles file reading/writing errors appropriately.
 // - Ensure DecryptFile successfully decrypts data with valid inputs.
 // - Ensure that DecryptFile results in the original data after encryption and decryption.
+// - Test encryption with different nonce sizes
+// - Test that encrypted files include padding to obscure length
+// - Test decryption with wrong key fails
+// - Test decryption with wrong nonce fails
+// - Test round-trip encryption/decryption with various data types and sizes
+// - Test that ciphertext is different with different nonces
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -304,5 +311,222 @@ func TestEncryptDecrypt_DifferentKeysOrNonces(t *testing.T) {
 	err = svc.DecryptFile("/encrypted.enc", "/decrypted.txt", key2, nonce)
 	if err == nil {
 		t.Error("expected error when decrypting with wrong key")
+	}
+}
+
+func TestEncryptFile_DifferentNoncesSamePlaintext(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+	key := make([]byte, 32)
+	nonce1 := []byte("nonce1-12345")
+	nonce2 := []byte("nonce2-12345")
+	plaintext := []byte("same plaintext")
+
+	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
+
+	// Encrypt with nonce1
+	err := svc.EncryptFile("/input.txt", "/encrypted1.enc", key, nonce1)
+	if err != nil {
+		t.Fatalf("encryption with nonce1 failed: %v", err)
+	}
+
+	// Encrypt with nonce2
+	err = svc.EncryptFile("/input.txt", "/encrypted2.enc", key, nonce2)
+	if err != nil {
+		t.Fatalf("encryption with nonce2 failed: %v", err)
+	}
+
+	// Ciphertexts should be different
+	ciphertext1, _ := afero.ReadFile(fs, "/encrypted1.enc")
+	ciphertext2, _ := afero.ReadFile(fs, "/encrypted2.enc")
+
+	if bytes.Equal(ciphertext1, ciphertext2) {
+		t.Error("ciphertexts with different nonces should be different")
+	}
+}
+
+func TestDecryptFile_WrongNonce(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+	key := make([]byte, 32)
+	nonce1 := []byte("nonce1-12345")
+	nonce2 := []byte("nonce2-12345")
+	plaintext := []byte("secret message")
+
+	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
+
+	// Encrypt with nonce1
+	err := svc.EncryptFile("/input.txt", "/encrypted.enc", key, nonce1)
+	if err != nil {
+		t.Fatalf("encryption failed: %v", err)
+	}
+
+	// Try to decrypt with nonce2 - should fail
+	err = svc.DecryptFile("/encrypted.enc", "/decrypted.txt", key, nonce2)
+	if err == nil {
+		t.Error("expected error when decrypting with wrong nonce")
+	}
+}
+
+func TestEncryptFile_ShortNonce(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+	key := make([]byte, 32)
+	shortNonce := make([]byte, 6) // Too short
+	plaintext := []byte("test data")
+
+	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
+
+	err := svc.EncryptFile("/input.txt", "/encrypted.enc", key, shortNonce)
+	if err == nil {
+		t.Error("expected error for short nonce")
+	}
+}
+
+func TestDecryptFile_ShortNonce(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+	key := make([]byte, 32)
+	shortNonce := make([]byte, 6) // Too short
+
+	afero.WriteFile(fs, "/encrypted.enc", []byte("fake ciphertext"), 0o644)
+
+	err := svc.DecryptFile("/encrypted.enc", "/output.txt", key, shortNonce)
+	if err == nil {
+		t.Error("expected error for short nonce")
+	}
+}
+
+func TestEncryptFile_LongNonceIsTrimmed(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+	key := make([]byte, 32)
+
+	longNonce := make([]byte, 24) // Longer than needed, should be trimmed
+	for i := range longNonce {
+		longNonce[i] = byte(i)
+	}
+
+	plaintext := []byte("test data")
+
+	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
+
+	err := svc.EncryptFile("/input.txt", "/encrypted.enc", key, longNonce)
+	if err != nil {
+		t.Fatalf("encryption should succeed with long nonce (trimmed): %v", err)
+	}
+
+	// Verify we can decrypt using the same long nonce (trimmed to same value)
+	err = svc.DecryptFile("/encrypted.enc", "/decrypted.txt", key, longNonce)
+	if err != nil {
+		t.Fatalf("decryption failed: %v", err)
+	}
+
+	result, _ := afero.ReadFile(fs, "/decrypted.txt")
+	if !bytes.Equal(result, plaintext) {
+		t.Error("decrypted data doesn't match original")
+	}
+}
+
+func TestEncryptFile_IncludesPadding(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+	key := make([]byte, 32)
+	nonce := make([]byte, 12)
+
+	// Encrypt same plaintext multiple times to verify padding varies
+	plaintext := []byte("test data")
+	ciphertextLengths := make(map[int]bool)
+
+	// Run multiple encryptions
+	for i := range 10 {
+		inputPath := fmt.Sprintf("/input_%d", i)
+		encPath := fmt.Sprintf("/enc_%d", i)
+
+		afero.WriteFile(fs, inputPath, plaintext, 0o644)
+
+		err := svc.EncryptFile(inputPath, encPath, key, nonce)
+		if err != nil {
+			t.Fatalf("encryption failed: %v", err)
+		}
+
+		ciphertext, _ := afero.ReadFile(fs, encPath)
+		ciphertextLengths[len(ciphertext)] = true
+	}
+
+	// Verify that we got different ciphertext lengths (due to random padding)
+	// With 10 encryptions and random padding, we should see variation
+	if len(ciphertextLengths) < 9 {
+		t.Errorf(
+			"expected different ciphertext lengths due to random padding, got only %d unique length(s)",
+			len(ciphertextLengths),
+		)
+	}
+
+	// Also verify ciphertexts are substantially larger than plaintext
+	for length := range ciphertextLengths {
+		if length <= len(plaintext)+50 {
+			t.Errorf(
+				"ciphertext length %d should be substantially larger than plaintext length %d",
+				length,
+				len(plaintext),
+			)
+		}
+	}
+}
+
+func TestEncryptDecrypt_EmptyData(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+	key := make([]byte, 32)
+	nonce := make([]byte, 12)
+
+	// Test that empty data can be encrypted and decrypted
+	afero.WriteFile(fs, "/empty.txt", []byte{}, 0o644)
+
+	err := svc.EncryptFile("/empty.txt", "/encrypted.enc", key, nonce)
+	if err != nil {
+		t.Fatalf("encryption of empty data failed: %v", err)
+	}
+
+	err = svc.DecryptFile("/encrypted.enc", "/decrypted.txt", key, nonce)
+	if err != nil {
+		t.Fatalf("decryption failed: %v", err)
+	}
+
+	result, _ := afero.ReadFile(fs, "/decrypted.txt")
+	if len(result) != 0 {
+		t.Errorf("expected empty result, got %d bytes", len(result))
+	}
+}
+
+func TestDecryptFile_CorruptedEnvelope(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	svc := NewService(fs)
+	key := make([]byte, 32)
+	nonce := make([]byte, 12)
+
+	// Create a valid encryption then corrupt it by changing the ciphertext
+	// in a way that makes the JSON invalid after decryption
+	plaintext := []byte("test")
+	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
+
+	err := svc.EncryptFile("/input.txt", "/encrypted.enc", key, nonce)
+	if err != nil {
+		t.Fatalf("encryption failed: %v", err)
+	}
+
+	// Read the encrypted file and flip a bit
+	ciphertext, _ := afero.ReadFile(fs, "/encrypted.enc")
+	if len(ciphertext) > 10 {
+		ciphertext[5] ^= 0xFF // Corrupt a byte
+		afero.WriteFile(fs, "/corrupted.enc", ciphertext, 0o644)
+
+		err = svc.DecryptFile("/corrupted.enc", "/decrypted.txt", key, nonce)
+		if err == nil {
+			t.Error("expected error when decrypting corrupted data")
+		}
+	} else {
+		t.Errorf("ciphertext too short: %d bytes", len(ciphertext))
 	}
 }
