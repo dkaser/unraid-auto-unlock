@@ -230,7 +230,7 @@ func (s *Service) WaitForArrayStatus(status string, timeout time.Duration) error
 		}
 
 		log.Debug().
-			Str("status", status).
+			Str("desiredStatus", status).
 			Int("delaySeconds", int(constants.ArrayRetryDelay.Seconds())).
 			Msg("Array has not reached status yet, retrying")
 		time.Sleep(constants.ArrayRetryDelay)
@@ -249,6 +249,7 @@ func (s *Service) emhttpdCommand(params url.Values) (string, error) {
 
 	// Create HTTP client that communicates over Unix socket
 	client := &http.Client{
+		Timeout: constants.ArrayStatusTimeout,
 		Transport: &http.Transport{
 			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
 				return net.Dial("unix", "/var/run/emhttpd.socket")
@@ -289,9 +290,6 @@ func (s *Service) emhttpdCommand(params url.Values) (string, error) {
 
 	// Check if there's an error in the response body
 	responseText := strings.TrimSpace(string(body))
-	if responseText != "" {
-		return "", fmt.Errorf("command failed: %s", responseText)
-	}
 
 	return responseText, nil
 }

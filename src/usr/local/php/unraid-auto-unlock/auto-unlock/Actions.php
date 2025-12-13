@@ -128,7 +128,7 @@ class Actions
         $exitCode = self::streamProcess(
             $process,
             "Unlocking Drives\n",
-            "Result: TIMEOUT (exceeded 120 seconds)\n"
+            "Result: TIMEOUT\n"
         );
         if ($exitCode === 0) {
             echo "Result: SUCCESS\n";

@@ -41,16 +41,52 @@ $arrayStopped = Utils::isArrayStopped();
 
 <script type="text/javascript">
     async function streamToOutput(response, outputId) {
-        const reader = response.body.getReader();
-        let decoder = new TextDecoder();
+        const outputEl = document.getElementById(outputId);
         let output = '';
-        document.getElementById(outputId).textContent = '';
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            output += chunk;
-            document.getElementById(outputId).textContent = output;
+        
+        // Check if streaming is supported and available
+        if (!response.body || typeof response.body.getReader !== 'function') {
+            // Fallback to non-streaming response.text()
+            try {
+                output = await response.text();
+                outputEl.textContent = output;
+            } catch (error) {
+                console.error('Error reading response:', error);
+                outputEl.textContent = 'Error reading response: ' + error.message;
+            }
+            return;
+        }
+        
+        // Attempt streaming
+        try {
+            const reader = response.body.getReader();
+            let decoder = new TextDecoder();
+            outputEl.textContent = '';
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                output += chunk;
+                outputEl.textContent = output;
+            }
+            
+            // Flush any remaining buffered bytes
+            const finalChunk = decoder.decode();
+            if (finalChunk) {
+                output += finalChunk;
+                outputEl.textContent = output;
+            }
+        } catch (error) {
+            // If streaming fails, fall back to response.text()
+            console.error('Streaming failed, falling back to text():', error);
+            try {
+                output = await response.text();
+                outputEl.textContent = output;
+            } catch (textError) {
+                console.error('Error reading response text:', textError);
+                outputEl.textContent = (output || '') + '\nError reading response: ' + textError.message;
+            }
         }
     }
 </script>
