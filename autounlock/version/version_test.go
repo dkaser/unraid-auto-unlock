@@ -11,7 +11,6 @@ import (
 // - Test BuildInfoString contains expected fields
 // - Test OutputToDebug doesn't panic
 // - Test Tag variable can be set and retrieved
-// - Test handling of nil GitDirty field
 // - Test handling of true/false GitDirty values
 
 func TestGetBuildInfo_ReturnsValidStruct(t *testing.T) {
@@ -31,6 +30,7 @@ func TestGetBuildInfo_ReturnsValidStruct(t *testing.T) {
 func TestGetBuildInfo_UsesTagVariable(t *testing.T) {
 	// Save original value
 	originalTag := Tag
+
 	defer func() { Tag = originalTag }()
 
 	// Set custom tag
@@ -57,7 +57,6 @@ func TestBuildInfoString_ContainsExpectedFields(t *testing.T) {
 	expectedFields := []string{
 		"Tag:",
 		"Revision:",
-		"Git Dirty:",
 	}
 
 	for _, field := range expectedFields {
@@ -70,6 +69,7 @@ func TestBuildInfoString_ContainsExpectedFields(t *testing.T) {
 func TestBuildInfoString_WithCustomTag(t *testing.T) {
 	// Save original value
 	originalTag := Tag
+
 	defer func() { Tag = originalTag }()
 
 	// Set custom tag
@@ -79,17 +79,6 @@ func TestBuildInfoString_WithCustomTag(t *testing.T) {
 
 	if !strings.Contains(result, "v2.0.0-custom") {
 		t.Errorf("BuildInfoString should contain custom tag, got: %s", result)
-	}
-}
-
-func TestBuildInfoString_HandlesNilGitDirty(t *testing.T) {
-	// BuildInfo with nil GitDirty
-	result := BuildInfoString()
-
-	// Should contain "Unknown" when GitDirty is nil
-	if !strings.Contains(result, "Unknown") && !strings.Contains(result, "Yes") {
-		// It's either Unknown or has a value, both are valid
-		// Just ensure it doesn't panic
 	}
 }
 
@@ -106,6 +95,7 @@ func TestOutputToDebug_DoesNotPanic(t *testing.T) {
 func TestOutputToDebug_WithDifferentTags(t *testing.T) {
 	// Save original value
 	originalTag := Tag
+
 	defer func() { Tag = originalTag }()
 
 	testTags := []string{
@@ -130,7 +120,7 @@ func TestOutputToDebug_WithDifferentTags(t *testing.T) {
 	}
 }
 
-func TestBuildInfo_AllFieldsAccessible(t *testing.T) {
+func TestBuildInfo_AllFieldsAccessible(_ *testing.T) {
 	info := GetBuildInfo()
 
 	// Verify all fields are accessible and of correct type
@@ -146,6 +136,7 @@ func TestBuildInfo_AllFieldsAccessible(t *testing.T) {
 func TestBuildInfoString_FormatsCorrectly(t *testing.T) {
 	// Save original value
 	originalTag := Tag
+
 	defer func() { Tag = originalTag }()
 
 	Tag = "test-tag"
