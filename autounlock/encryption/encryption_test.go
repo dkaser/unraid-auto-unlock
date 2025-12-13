@@ -401,10 +401,12 @@ func TestEncryptFile_LongNonceIsTrimmed(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	svc := NewService(fs)
 	key := make([]byte, 32)
+
 	longNonce := make([]byte, 24) // Longer than needed, should be trimmed
 	for i := range longNonce {
 		longNonce[i] = byte(i)
 	}
+
 	plaintext := []byte("test data")
 
 	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
@@ -437,7 +439,7 @@ func TestEncryptFile_IncludesPadding(t *testing.T) {
 	ciphertextLengths := make(map[int]bool)
 
 	// Run multiple encryptions
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		inputPath := fmt.Sprintf("/input_%d", i)
 		encPath := fmt.Sprintf("/enc_%d", i)
 
@@ -455,13 +457,20 @@ func TestEncryptFile_IncludesPadding(t *testing.T) {
 	// Verify that we got different ciphertext lengths (due to random padding)
 	// With 10 encryptions and random padding, we should see variation
 	if len(ciphertextLengths) < 10 {
-		t.Errorf("expected different ciphertext lengths due to random padding, got only %d unique length(s)", len(ciphertextLengths))
+		t.Errorf(
+			"expected different ciphertext lengths due to random padding, got only %d unique length(s)",
+			len(ciphertextLengths),
+		)
 	}
 
 	// Also verify ciphertexts are substantially larger than plaintext
 	for length := range ciphertextLengths {
 		if length <= len(plaintext)+50 {
-			t.Errorf("ciphertext length %d should be substantially larger than plaintext length %d", length, len(plaintext))
+			t.Errorf(
+				"ciphertext length %d should be substantially larger than plaintext length %d",
+				length,
+				len(plaintext),
+			)
 		}
 	}
 }
@@ -501,6 +510,7 @@ func TestDecryptFile_CorruptedEnvelope(t *testing.T) {
 	// in a way that makes the JSON invalid after decryption
 	plaintext := []byte("test")
 	afero.WriteFile(fs, "/input.txt", plaintext, 0o644)
+
 	err := svc.EncryptFile("/input.txt", "/encrypted.enc", key, nonce)
 	if err != nil {
 		t.Fatalf("encryption failed: %v", err)

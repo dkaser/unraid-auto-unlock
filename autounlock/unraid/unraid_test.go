@@ -2,6 +2,7 @@ package unraid
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -225,7 +226,7 @@ func TestGetFsState_MalformedIni(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(_ *testing.T) {
 			_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(tc.content), 0o644)
 
 			// These should not panic or crash
@@ -305,7 +306,8 @@ func TestWaitForVarIni_FileAppearsLater(t *testing.T) {
 
 	// Create file in a goroutine after a short delay
 	go func() {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(15 * time.Second)
+
 		varIniContent := `fsState=Started
 `
 		_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(varIniContent), 0o644)
@@ -326,7 +328,8 @@ func TestWaitForVarIni_EmptyFileBecomesValid(t *testing.T) {
 
 	// Update file with valid content in background
 	go func() {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(15 * time.Second)
+
 		varIniContent := `fsState=Started
 `
 		_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(varIniContent), 0o644)
@@ -398,7 +401,9 @@ func TestIsUnraid_WithDifferentVersionContent(t *testing.T) {
 			_ = afero.WriteFile(fs, "/etc/unraid-version", []byte(tc.content), 0o644)
 
 			if !svc.IsUnraid() {
-				t.Error("IsUnraid should return true when /etc/unraid-version exists regardless of content")
+				t.Error(
+					"IsUnraid should return true when /etc/unraid-version exists regardless of content",
+				)
 			}
 		})
 	}
@@ -410,14 +415,23 @@ func TestGetFsState_LargeFile(t *testing.T) {
 
 	// Create a large var.ini with many fields
 	content := ""
-	for i := 0; i < 100; i++ {
+
+	var contentSb413 strings.Builder
+	for i := range 100 {
 		// Use valid key names (alphanumeric)
-		content += fmt.Sprintf("field%d=value%d\n", i, i)
+		contentSb413.WriteString(fmt.Sprintf("field%d=value%d\n", i, i))
 	}
+
+	content += contentSb413.String()
+
 	content += "fsState=Started\n"
+
+	var contentSb418 strings.Builder
 	for i := 100; i < 200; i++ {
-		content += fmt.Sprintf("field%d=value%d\n", i, i)
+		contentSb418.WriteString(fmt.Sprintf("field%d=value%d\n", i, i))
 	}
+
+	content += contentSb418.String()
 
 	_ = afero.WriteFile(fs, "/var/local/emhttp/var.ini", []byte(content), 0o644)
 

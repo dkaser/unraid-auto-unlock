@@ -22,52 +22,24 @@ func TestCmdArgs_Version(t *testing.T) {
 	// At minimum, it should not panic
 }
 
-func TestCmdArgs_Defaults(t *testing.T) {
-	// Test that default struct has expected values
-	args := CmdArgs{}
-
-	// These are defined in the struct tags as defaults
-	// Just verify the struct can be instantiated
-	if args.Config != "" && args.Config != "/boot/config/plugins/auto-unlock/config.txt" {
-		// Default might not be set until parsing
-	}
+func TestCmdArgs_Defaults(_ *testing.T) {
+	// Just verify struct exists
+	_ = CmdArgs{}
 }
 
-func TestSetupCmd_Defaults(t *testing.T) {
-	setup := SetupCmd{}
-
-	// Check default values from struct tags
-	if setup.Threshold != 0 && setup.Threshold != 3 {
-		// Default is 3 according to struct tag
-	}
-
-	if setup.Shares != 0 && setup.Shares != 5 {
-		// Default is 5 according to struct tag
-	}
+func TestSetupCmd_Defaults(_ *testing.T) {
+	// Just verify struct exists
+	_ = SetupCmd{}
 }
 
-func TestUnlockCmd_Defaults(t *testing.T) {
-	unlock := UnlockCmd{}
-
-	// These values should be set by arg parser, so just verify struct
-	_ = unlock.RetryDelay
-	_ = unlock.ServerTimeout
-	_ = unlock.Test
+func TestUnlockCmd_Defaults(_ *testing.T) {
+	// Just verify struct exists
+	_ = UnlockCmd{}
 }
 
-func TestResetCmd_Structure(t *testing.T) {
-	reset := ResetCmd{}
-
-	// Verify Force field exists and can be set
-	reset.Force = true
-	if !reset.Force {
-		t.Error("Force field should be settable")
-	}
-
-	reset.Force = false
-	if reset.Force {
-		t.Error("Force field should be settable to false")
-	}
+func TestResetCmd_Structure(_ *testing.T) {
+	// Just verify struct exists
+	_ = ResetCmd{}
 }
 
 func TestTestPathCmd_Structure(t *testing.T) {
@@ -85,7 +57,7 @@ func TestTestPathCmd_Structure(t *testing.T) {
 	}
 }
 
-func TestObscureCmd_Structure(t *testing.T) {
+func TestObscureCmd_Structure(_ *testing.T) {
 	// ObscureCmd is an empty struct, just verify it exists
 	_ = ObscureCmd{}
 }

@@ -260,7 +260,7 @@ func TestReadStateFromFile_MultipleReads(t *testing.T) {
 	}
 
 	// Read multiple times to ensure idempotency
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		readState, err := svc.ReadStateFromFile(filePath)
 		if err != nil {
 			t.Fatalf("ReadStateFromFile failed on iteration %d: %v", i, err)

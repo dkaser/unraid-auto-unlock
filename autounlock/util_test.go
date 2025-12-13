@@ -46,7 +46,7 @@ func TestRemoveKeyfile_FileExists(t *testing.T) {
 	}
 }
 
-func TestRemoveKeyfile_FileMissing(t *testing.T) {
+func TestRemoveKeyfile_FileMissing(_ *testing.T) {
 	fs := afero.NewMemMapFs()
 	keyfilePath := "/root/keyfile"
 

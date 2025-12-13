@@ -326,12 +326,15 @@ func TestCombineSecret_InsufficientShares(t *testing.T) {
 
 	// Try with only 2 shares when threshold is 3
 	keyShares := make([]*keys.KeyShare, 2)
+
 	for i := range 2 {
 		shareBase64 := base64.StdEncoding.EncodeToString(sharedSecret.Shares[i])
+
 		keyShare, err := svc.GetShare(shareBase64, sharedSecret.SigningKey)
 		if err != nil {
 			t.Fatalf("GetShare failed: %v", err)
 		}
+
 		keyShares[i] = keyShare
 	}
 
@@ -359,6 +362,7 @@ func TestCombineSecret_WithDuplicateShares(t *testing.T) {
 
 	// Use same share multiple times
 	shareBase64 := base64.StdEncoding.EncodeToString(sharedSecret.Shares[0])
+
 	keyShare, err := svc.GetShare(shareBase64, sharedSecret.SigningKey)
 	if err != nil {
 		t.Fatalf("GetShare failed: %v", err)
@@ -366,7 +370,7 @@ func TestCombineSecret_WithDuplicateShares(t *testing.T) {
 
 	keyShares := []*keys.KeyShare{keyShare, keyShare, keyShare}
 
-	_, err = svc.CombineSecret(keyShares)
+	_, _ = svc.CombineSecret(keyShares)
 	// This might succeed or fail depending on the library's handling of duplicates
 	// The important thing is it doesn't panic
 }
@@ -480,10 +484,12 @@ func TestCombineSecret_WithAllShares(t *testing.T) {
 	keyShares := make([]*keys.KeyShare, totalShares)
 	for i := range totalShares {
 		shareBase64 := base64.StdEncoding.EncodeToString(sharedSecret.Shares[i])
+
 		keyShare, err := svc.GetShare(shareBase64, sharedSecret.SigningKey)
 		if err != nil {
 			t.Fatalf("GetShare failed for share %d: %v", i, err)
 		}
+
 		keyShares[i] = keyShare
 	}
 
@@ -512,10 +518,12 @@ func TestCombineSecret_WithExactThreshold(t *testing.T) {
 	keyShares := make([]*keys.KeyShare, threshold)
 	for i := range threshold {
 		shareBase64 := base64.StdEncoding.EncodeToString(sharedSecret.Shares[i])
+
 		keyShare, err := svc.GetShare(shareBase64, sharedSecret.SigningKey)
 		if err != nil {
 			t.Fatalf("GetShare failed for share %d: %v", i, err)
 		}
+
 		keyShares[i] = keyShare
 	}
 
