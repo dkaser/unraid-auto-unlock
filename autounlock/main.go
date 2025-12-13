@@ -25,6 +25,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	lockFile, err := lockApp()
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Another instance of the application is already running")
+
+		return
+	}
+
 	switch {
 	case args.Reset != nil:
 		err = autoUnlock.ResetConfiguration()
@@ -37,6 +44,8 @@ func main() {
 	case args.Unlock != nil:
 		err = autoUnlock.Unlock()
 	}
+
+	lockFile.Close()
 
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Failed to execute command")

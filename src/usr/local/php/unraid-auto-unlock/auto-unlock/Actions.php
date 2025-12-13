@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\StreamInterface as StreamInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 /*
@@ -38,19 +39,27 @@ class Actions
             echo $startMsg;
             flush();
         }
-        $process->start();
-        while ($process->isRunning()) {
-            $out = $process->getIncrementalOutput();
-            $err = $process->getIncrementalErrorOutput();
-            if ($out) {
-                echo $out;
+        try {
+            $process->start();
+            while ($process->isRunning()) {
+                $out = $process->getIncrementalOutput();
+                $err = $process->getIncrementalErrorOutput();
+                if ($out) {
+                    echo $out;
+                    flush();
+                }
+                if ($err) {
+                    echo $err;
+                    flush();
+                }
+                usleep(100000); // 0.1s
+            }
+        } catch (ProcessTimedOutException $e) {
+            if ($timeoutMsg) {
+                echo $timeoutMsg;
                 flush();
             }
-            if ($err) {
-                echo $err;
-                flush();
-            }
-            usleep(100000); // 0.1s
+            return -1;
         }
         // Final output after process ends
         $out = $process->getIncrementalOutput();
@@ -124,7 +133,7 @@ class Actions
             'unlock',
             '--pretty'
         ]);
-        $process->setTimeout(60);
+        $process->setTimeout(300);
         $exitCode = self::streamProcess(
             $process,
             "Unlocking Drives\n",

@@ -42,6 +42,11 @@ $arrayStopped = Utils::isArrayStopped();
 <script type="text/javascript">
     async function streamToOutput(response, outputId) {
         const outputEl = document.getElementById(outputId);
+        if (!outputEl) {
+            console.error('Output element not found:', outputId);
+            return;
+        }
+
         let output = '';
         
         // Check if streaming is supported and available
@@ -141,7 +146,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
             'shares_total': sharesTotal,
             'shares_unlock': sharesUnlock,
             'keyfile_data': keyfileContent,
-            'csrf_token': '<?= $csrfToken; ?>'
+            'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
         try {
@@ -234,7 +239,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
         const formData = new URLSearchParams({
             'test_path': testPathValue,
-            'csrf_token': '<?= $csrfToken; ?>'
+            'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
         try {
@@ -255,7 +260,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
         const formData = new URLSearchParams({
             'obscure_value': obscureValue,
-            'csrf_token': '<?= $csrfToken; ?>'
+            'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
         try {
@@ -274,7 +279,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
     async function testConfig() {
         const formData = new URLSearchParams({
-            'csrf_token': '<?= $csrfToken; ?>'
+            'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
         document.querySelector('.output_display').style.display = 'block';
@@ -296,7 +301,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 
     async function unlockArray() {
         const formData = new URLSearchParams({
-            'csrf_token': '<?= $csrfToken; ?>'
+            'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
         document.querySelector('.output_display').style.display = 'block';
@@ -307,7 +312,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
             const response = await fetch('/plugins/auto-unlock/action.php/open', {
                 method: 'POST',
                 body: formData,
-                signal: AbortSignal.timeout(120000)
+                signal: AbortSignal.timeout(360000)
             });
             await streamToOutput(response, 'command_output');
         } catch (error) {

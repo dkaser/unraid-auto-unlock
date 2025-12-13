@@ -164,7 +164,7 @@ func (s *Service) GetCsrfToken() (string, error) {
 	}
 
 	csrfToken := cfg.Section("").Key("csrf_token").String()
-	log.Debug().Str("csrfToken", csrfToken).Msg("Read csrf token from var.ini")
+	log.Debug().Bool("hasCsrfToken", csrfToken != "").Msg("Read csrf token from var.ini")
 
 	if csrfToken == "" {
 		return "", errors.New("csrf token is empty")
@@ -251,8 +251,10 @@ func (s *Service) emhttpdCommand(params url.Values) (string, error) {
 	client := &http.Client{
 		Timeout: constants.ArrayStatusTimeout,
 		Transport: &http.Transport{
-			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-				return net.Dial("unix", "/var/run/emhttpd.socket")
+			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+				d := net.Dialer{}
+
+				return d.DialContext(ctx, "unix", "/var/run/emhttpd.socket")
 			},
 		},
 	}
