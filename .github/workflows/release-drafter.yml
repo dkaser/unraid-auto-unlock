@@ -12,6 +12,10 @@ jobs:
       pull-requests: read
     runs-on: ubuntu-latest
     steps:
+      # Wait for GitHub API to catch up after merge
+      - name: Wait for API
+        run: sleep 10
+
       # Calculate version string in format YYYY.MM.DD.HHMM
       - name: Set version string
         id: set_version
