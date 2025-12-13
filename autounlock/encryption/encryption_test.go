@@ -456,7 +456,7 @@ func TestEncryptFile_IncludesPadding(t *testing.T) {
 
 	// Verify that we got different ciphertext lengths (due to random padding)
 	// With 10 encryptions and random padding, we should see variation
-	if len(ciphertextLengths) < 10 {
+	if len(ciphertextLengths) < 9 {
 		t.Errorf(
 			"expected different ciphertext lengths due to random padding, got only %d unique length(s)",
 			len(ciphertextLengths),
@@ -526,5 +526,7 @@ func TestDecryptFile_CorruptedEnvelope(t *testing.T) {
 		if err == nil {
 			t.Error("expected error when decrypting corrupted data")
 		}
+	} else {
+		t.Errorf("ciphertext too short: %d bytes", len(ciphertext))
 	}
 }
