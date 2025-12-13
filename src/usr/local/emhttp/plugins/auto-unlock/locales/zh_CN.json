@@ -20,5 +20,6 @@
     "not_shown_again": "这些份额将不会再次显示。",
     "obscure": "隐藏",
     "obscure_value": "隐藏值",
-    "download_locations_instructions": "指定插件在启动过程中应从哪些位置检索关键片段。每个位置应占据一行。支持的格式示例如下所示："
+    "download_locations_instructions": "指定插件在启动过程中应从哪些位置检索关键片段。每个位置应占据一行。支持的格式示例如下所示：",
+    "unlock_array": "解锁阵列"
 }

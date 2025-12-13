@@ -20,5 +20,6 @@
     "not_shown_again": "Queste condivisioni non saranno più visualizzate.",
     "obscure": "Offusca",
     "obscure_value": "Valore offuscato",
-    "download_locations_instructions": "Specifica le posizioni da cui il plugin deve recuperare i frammenti della chiave durante l'avvio. Ogni posizione deve essere su una riga separata. Puoi trovare esempi di formati supportati nel seguente esempio:"
+    "download_locations_instructions": "Specifica le posizioni da cui il plugin deve recuperare i frammenti della chiave durante l'avvio. Ogni posizione deve essere su una riga separata. Puoi trovare esempi di formati supportati nel seguente esempio:",
+    "unlock_array": "Sblocca Array"
 }
