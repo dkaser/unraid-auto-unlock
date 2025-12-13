@@ -43,4 +43,13 @@ class Utils extends \EDACerton\PluginUtils\Utils
         }
         return (string) $var_ini['csrf_token'];
     }
+
+    public static function isArrayStopped(): bool
+    {
+        $var_ini = parse_ini_file("/var/local/emhttp/var.ini");
+        if ($var_ini === false || ! isset($var_ini['fsState'])) {
+            return false;
+        }
+        return (strtolower($var_ini['fsState']) === 'stopped');
+    }
 }

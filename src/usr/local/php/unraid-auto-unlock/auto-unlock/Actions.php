@@ -28,6 +28,60 @@ class Actions
 {
     public const BIN_PATH = '/usr/local/php/unraid-auto-unlock/bin/autounlock';
 
+    public static function Unlock(Request $request, Response $response): Response
+    {
+        $responseBody = "Checking for existing unlock processes" . PHP_EOL;
+        // First, find and kill any running unlock processes
+        $findProcess = new Process(['pgrep', '-f', self::BIN_PATH]);
+        $findProcess->run();
+        if ($findProcess->isSuccessful()) {
+            $pids = explode(PHP_EOL, trim($findProcess->getOutput()));
+            foreach ($pids as $pid) {
+                if (is_numeric($pid)) {
+                    $responseBody .= "Terminating existing unlock process with PID: {$pid}" . PHP_EOL;
+                    $killProcess = new Process(['kill', $pid]);
+                    $killProcess->run();
+                }
+            }
+            sleep(1); // Give some time for processes to terminate
+        }
+
+        $findProcess->run();
+        if ($findProcess->isSuccessful()) {
+            $responseBody .= "Error: Unable to terminate existing unlock processes." . PHP_EOL;
+            $response->getBody()->write($responseBody);
+            return $response->withHeader('Content-Type', 'text/plain')->withStatus(500);
+        }
+
+        $process = new Process([
+            self::BIN_PATH,
+            'unlock',
+            '--pretty'
+        ]);
+        $process->setTimeout(60);
+
+        try {
+            $process->run();
+            $timedOut = false;
+        } catch (\Symfony\Component\Process\Exception\ProcessTimedOutException $e) {
+            $timedOut = true;
+        }
+
+        $responseBody .= "Unlocking Drives" . PHP_EOL;
+        if ($timedOut) {
+            $responseBody .= "Result: TIMEOUT (exceeded 120 seconds)" . PHP_EOL;
+        } elseif ( ! $process->isSuccessful()) {
+            $responseBody .= "Result: FAIL" . PHP_EOL;
+        } else {
+            $responseBody .= "Result: SUCCESS" . PHP_EOL;
+        }
+
+        $responseBody .= PHP_EOL . "Log:" . PHP_EOL . $process->getErrorOutput();
+
+        $response->getBody()->write($responseBody);
+        return $response->withHeader('Content-Type', 'text/plain')->withStatus(200);
+    }
+
     public static function Test(Request $request, Response $response): Response
     {
         $process = new Process([

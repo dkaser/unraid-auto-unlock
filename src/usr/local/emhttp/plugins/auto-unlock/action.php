@@ -55,4 +55,8 @@ $app->post("{$prefix}/test_path", function (Request $request, Response $response
     return Actions::TestPath($request, $response);
 });
 
+$app->post("{$prefix}/open", function (Request $request, Response $response, $args) {
+    return Actions::Unlock($request, $response);
+});
+
 $app->run();

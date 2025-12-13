@@ -25,8 +25,9 @@ if ( ! defined(__NAMESPACE__ . '\PLUGIN_ROOT') || ! defined(__NAMESPACE__ . '\PL
     throw new \RuntimeException("Common file not loaded.");
 }
 
-$tr        = $tr ?? new Translator(PLUGIN_ROOT);
-$csrfToken = Utils::getCsrfToken();
+$tr           = $tr ?? new Translator(PLUGIN_ROOT);
+$csrfToken    = Utils::getCsrfToken();
+$arrayStopped = Utils::isArrayStopped();
 ?>
 
 <div class="output_display" style="display:none;">
@@ -245,6 +246,30 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
         }
         document.getElementById('continue_button').disabled = false;
     }
+
+    async function unlockArray() {
+        const formData = new URLSearchParams({
+            'csrf_token': '<?= $csrfToken; ?>'
+        });
+
+        document.querySelector('.output_display').style.display = 'block';
+        document.querySelector('.config_forms').style.display = 'none';
+        document.getElementById('command_output').textContent = "Unlocking array... Please wait.";
+
+        try {
+            const response = await fetch('/plugins/auto-unlock/action.php/open', {
+                method: 'POST',
+                body: formData,
+                signal: AbortSignal.timeout(120000)
+            });
+
+            const result = await response.text();
+            document.getElementById('command_output').textContent = result;
+        } catch (error) {
+            document.getElementById('command_output').textContent = 'Error during array unlock: ' + error.message;
+        }
+        document.getElementById('continue_button').disabled = false;
+    }
 </script>
 
 <table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("download_locations"); ?></td></tr></thead></table>
@@ -269,6 +294,14 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
 	</dd></dl>
 
 </form>
+
+<table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("unlock_array"); ?></td></tr></thead></table>
+<dl>
+    <dt><?= $tr->tr("unlock_array"); ?></dt>
+    <dd>
+        <input type="button" id="unlock_array_button" name="unlock_array_button" value="<?= $tr->tr("unlock_array"); ?>" onclick="unlockArray()" <?= $arrayStopped ? '' : 'disabled'; ?> />
+    </dd>
+</dl>
 
 <table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("test_path"); ?></td></tr></thead></table>
 <dl>
