@@ -67,10 +67,6 @@ class Actions
             flush();
         }
 
-        if ($process->isTerminated() && $process->getExitCode() === 143 && $timeoutMsg) {
-            echo $timeoutMsg;
-            flush();
-        }
         return $process->getExitCode() ?? -1;
     }
 
