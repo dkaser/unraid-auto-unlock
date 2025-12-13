@@ -120,19 +120,6 @@ func TestOutputToDebug_WithDifferentTags(t *testing.T) {
 	}
 }
 
-func TestBuildInfo_AllFieldsAccessible(_ *testing.T) {
-	info := GetBuildInfo()
-
-	// Verify all fields are accessible and of correct type
-	_ = info.Tag
-	_ = info.Revision
-
-	// GitDirty is a pointer, so test both nil and non-nil cases
-	if info.GitDirty != nil {
-		_ = *info.GitDirty
-	}
-}
-
 func TestBuildInfoString_FormatsCorrectly(t *testing.T) {
 	// Save original value
 	originalTag := Tag
