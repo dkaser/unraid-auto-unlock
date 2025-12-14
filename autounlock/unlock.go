@@ -70,6 +70,8 @@ func (a *AutoUnlock) Unlock() error {
 		// Check if array is already started before retrying
 		started := a.unraid.VerifyArrayStatus("Started")
 		if started {
+			log.Info().Msg("Array started successfully on its own")
+
 			return nil
 		}
 
