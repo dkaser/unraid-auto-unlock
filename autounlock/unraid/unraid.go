@@ -209,7 +209,7 @@ func (s *Service) StartArray() error {
 		return fmt.Errorf("failed to start array: %w", err)
 	}
 
-	log.Info().Str("response", response).Msg("Array started successfully")
+	log.Info().Str("response", response).Msg("Array start command sent successfully")
 
 	return nil
 }
