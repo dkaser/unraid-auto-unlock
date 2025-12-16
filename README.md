@@ -1,4 +1,4 @@
-# auto-unlock – Automatic Array Unlock Plugin for Unraid
+# Automatic Disk Unlock – Automatic Array Unlock Plugin for Unraid
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![GitHub Releases](https://img.shields.io/github/v/release/dkaser/unraid-auto-unlock)](https://github.com/dkaser/unraid-auto-unlock/releases)
@@ -9,7 +9,7 @@
 
 ## Overview
 
-**auto-unlock** is a plugin for Unraid that automatically unlocks your encrypted array and encrypted disks at boot time.
+**Automatic Disk Unlock** is a plugin for Unraid that automatically unlocks your encrypted array and encrypted disks at boot time.
 
 The plugin protects your disk encryption key using **Shamir's Secret Sharing**. Your disk encryption key is stored encrypted on the flash drive, protected by a randomly-generated wrapping key. This wrapping key is split into multiple pieces—you configure how many pieces to create and how many are needed to unlock your drives. At boot, the plugin retrieves the required number of pieces from locations you specify (like web servers, SSH hosts, or DNS records), reconstructs the wrapping key, decrypts your disk encryption key, and unlocks your array automatically.
 
