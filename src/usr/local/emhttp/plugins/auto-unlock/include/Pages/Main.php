@@ -96,6 +96,9 @@ $arrayStopped = Utils::isArrayStopped();
     }
 </script>
 
+<table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("instructions"); ?></td></tr></thead></table>
+<p><?= $tr->tr("instructions_details"); ?> <a href="https://edac.dev/unraid/auto-unlock/setup/" target="_blank">https://edac.dev/unraid/auto-unlock/setup/</a></p>
+
 <?php
 // Show initialize section if /boot/config/plugins/auto-unlock/state.json or /boot/config/plugins/auto-unlock/unlock.enc do not exist
 if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
