@@ -6,7 +6,7 @@
   author="Derek Kaser"
   version="2025.12.16.0447"
   launch="Settings/AutoUnlock"
-  pluginURL="https://raw.githubusercontent.com/dkaser/unraid-auto-unlock/main/plugin/auto-unlock-preview.plg"
+  pluginURL="https://raw.githubusercontent.com/dkaser/unraid-auto-unlock/main/plugin/auto-unlock.plg"
   support="https://forums.unraid.net/topic/195584-plugin-automatic-disk-unlock/"
   min="7.2.0"
   
@@ -63,10 +63,9 @@ upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-202
 rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2025.12.16.0447')
 
 # remove other branch (if switching between main and preview)
-rm -f /boot/config/plugins/auto-unlock.plg
-rm -f /var/log/plugins/auto-unlock.plg
-# Update plugin name for non-main branches
-sed -i "s/Automatic Disk Unlock/Automatic Disk Unlock (Preview)/" /usr/local/emhttp/plugins/auto-unlock/README.md
+
+rm -f /boot/config/plugins/auto-unlock-preview.plg
+rm -f /var/log/plugins/auto-unlock-preview.plg
 
 
 echo ""
