@@ -170,7 +170,7 @@ class Actions
         Utils::removeConfigFiles();
 
         return $response
-            ->withHeader('Location', '/Tools/AutoUnlock')
+            ->withHeader('Location', '/Settings/AutoUnlock')
             ->withStatus(303);
     }
 
