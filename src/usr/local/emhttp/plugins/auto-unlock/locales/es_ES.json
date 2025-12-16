@@ -21,5 +21,7 @@
     "obscure": "Ocultar",
     "obscure_value": "Valor oculto",
     "download_locations_instructions": "Especifique las ubicaciones desde las que el complemento debe recuperar las partes clave durante el arranque. Cada ubicación debe escribirse en una línea separada. Puede encontrar ejemplos de formatos compatibles en el siguiente ejemplo:",
-    "unlock_array": "Desbloquear conjunto"
+    "unlock_array": "Desbloquear conjunto",
+    "instructions": "Instrucciones",
+    "instructions_details": "Las instrucciones detalladas están disponibles en"
 }

@@ -21,5 +21,7 @@
     "obscure": "Obscurcir",
     "obscure_value": "Valeur obscurcie",
     "download_locations_instructions": "Spécifiez les emplacements à partir desquels le plugin doit récupérer les fragments de clé au démarrage. Chaque emplacement doit figurer sur sa propre ligne. Des exemples de formats pris en charge sont disponibles dans l'exemple ci-dessous :",
-    "unlock_array": "Déverrouiller l’ensemble"
+    "unlock_array": "Déverrouiller l’ensemble",
+    "instructions": "Instructions",
+    "instructions_details": "Des instructions détaillées sont disponibles sur"
 }

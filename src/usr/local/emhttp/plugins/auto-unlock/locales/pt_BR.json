@@ -21,5 +21,7 @@
     "obscure": "Obscure",
     "obscure_value": "Valor Obscuro",
     "download_locations_instructions": "Especifique os locais de onde o plugin deve recuperar as partes da chave durante a inicialização. Cada local deve estar em uma linha separada. Exemplos de formatos compatíveis podem ser encontrados na amostra abaixo.",
-    "unlock_array": "Desbloquear Array"
+    "unlock_array": "Desbloquear Array",
+    "instructions": "Instruções",
+    "instructions_details": "Instruções detalhadas estão disponíveis em"
 }

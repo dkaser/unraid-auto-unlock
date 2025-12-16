@@ -21,5 +21,7 @@
     "obscure": "Skjul",
     "obscure_value": "Skjul verdi",
     "download_locations_instructions": "Spesifiser stedene hvor programtillegget skal hente nøkkelbitene under oppstart. Hvert sted skal stå på en egen linje. Eksempler på støttede formater finnes i eksempelet nedenfor.",
-    "unlock_array": "Lås opp Array"
+    "unlock_array": "Lås opp Array",
+    "instructions": "Instruksjoner",
+    "instructions_details": "Detaljerte instruksjoner er tilgjengelige på"
 }
