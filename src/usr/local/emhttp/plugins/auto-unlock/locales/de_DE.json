@@ -21,5 +21,7 @@
     "obscure": "Verschleiern",
     "obscure_value": "Verschleierter Wert",
     "download_locations_instructions": "Geben Sie die Orte an, von denen das Plugin beim Systemstart die Schlüsselbestandteile abrufen soll. Jeder Ort sollte in einer eigenen Zeile stehen. Beispiele für unterstützte Formate finden Sie im folgenden Beispiel:",
-    "unlock_array": "Array entsperren"
+    "unlock_array": "Array entsperren",
+    "instructions": "Anweisungen",
+    "instructions_details": "Detaillierte Anweisungen sind verfügbar unter"
 }

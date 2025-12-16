@@ -21,5 +21,7 @@
     "obscure": "Ukryj",
     "obscure_value": "Ukryta wartość",
     "download_locations_instructions": "Określ lokalizacje, z których wtyczka ma pobierać kluczowe fragmenty podczas rozruchu. Każda lokalizacja powinna znajdować się w osobnym wierszu. Przykłady obsługiwanych formatów znajdziesz w poniższym przykładzie:",
-    "unlock_array": "Odblokuj macierz"
+    "unlock_array": "Odblokuj macierz",
+    "instructions": "Instrukcje",
+    "instructions_details": "Szczegółowe instrukcje są dostępne pod adresem"
 }

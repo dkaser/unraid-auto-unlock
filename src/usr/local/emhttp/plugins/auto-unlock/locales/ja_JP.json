@@ -21,5 +21,7 @@
     "obscure": "不可視化",
     "obscure_value": "値を不可視化",
     "download_locations_instructions": "起動時にプラグインがキーの構成要素を取得する場所を指定してください。各場所は別々の行に記述する必要があります。サポートされている形式の例は以下のサンプルに示されています。",
-    "unlock_array": "アレイのロックを解除する"
+    "unlock_array": "アレイのロックを解除する",
+    "instructions": "手順",
+    "instructions_details": "詳細な手順は以下をご覧ください"
 }
