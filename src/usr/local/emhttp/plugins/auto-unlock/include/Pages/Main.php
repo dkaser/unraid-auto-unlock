@@ -40,6 +40,18 @@ $arrayStopped = Utils::isArrayStopped();
 </div>
 
 <script type="text/javascript">
+    function displayOutput() {
+        const initForm = document.querySelector('.initialize_form');
+        const instructionsSection = document.querySelector('.instructions_section');
+        const configForms = document.querySelector('.config_forms');
+        const outputDisplay = document.querySelector('.output_display');
+        
+        if (initForm) initForm.style.display = 'none';
+        if (instructionsSection) instructionsSection.style.display = 'none';
+        if (configForms) configForms.style.display = 'none';
+        if (outputDisplay) outputDisplay.style.display = 'block';
+    }
+
     async function streamToOutput(response, outputId) {
         const outputEl = document.getElementById(outputId);
         if (!outputEl) {
@@ -96,8 +108,10 @@ $arrayStopped = Utils::isArrayStopped();
     }
 </script>
 
+<div class="instructions_section">
 <table class="unraid tablesorter"><thead><tr><td><?= $tr->tr("instructions"); ?></td></tr></thead></table>
 <p><?= $tr->tr("instructions_details"); ?> <a href="https://edac.dev/unraid/auto-unlock/setup/" rel="noopener noreferrer" target="_blank">https://edac.dev/unraid/auto-unlock/setup/</a></p>
+</div>
 
 <?php
 // Show initialize section if /boot/config/plugins/auto-unlock/state.json or /boot/config/plugins/auto-unlock/unlock.enc do not exist
@@ -127,9 +141,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
         let keyfileContent  = null;
 
         // Hide input form and show result area
-        document.querySelector('.initialize_form').style.display = 'none';
-        document.querySelector('.output_display').style.display = 'block';
-        document.getElementById('command_output').textContent = 'Initializing... Please wait.';
+        displayOutput();
 
         if (keyfileInput.files.length > 0) {
             const fileReader = new FileReader();
@@ -236,9 +248,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
         // POST to /plugins/auto-unlock/action.php/test_path with test_path parameter
         const testPathValue = document.getElementById('test_path').value;
 
-        document.querySelector('.output_display').style.display = 'block';
-        document.querySelector('.config_forms').style.display = 'none';
-        document.getElementById('command_output').textContent = 'Testing path... Please wait.';
+        displayOutput();
 
         const formData = new URLSearchParams({
             'test_path': testPathValue,
@@ -285,9 +295,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
             'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
-        document.querySelector('.output_display').style.display = 'block';
-        document.querySelector('.config_forms').style.display = 'none';
-        document.getElementById('command_output').textContent = "Testing configuration... Please wait.";
+        displayOutput();
 
         try {
             const response = await fetch('/plugins/auto-unlock/action.php/test', {
@@ -307,9 +315,7 @@ if ( ! file_exists(Utils::STATE_FILE) && ! file_exists(Utils::ENC_FILE)) {
             'csrf_token': <?= json_encode($csrfToken); ?>
         });
 
-        document.querySelector('.output_display').style.display = 'block';
-        document.querySelector('.config_forms').style.display = 'none';
-        document.getElementById('command_output').textContent = "Unlocking array... Please wait.";
+        displayOutput();
 
         try {
             const response = await fetch('/plugins/auto-unlock/action.php/open', {
