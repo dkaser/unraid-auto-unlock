@@ -4,7 +4,7 @@
 <PLUGIN 
   name="auto-unlock"
   author="Derek Kaser"
-  version="2025.12.16.0447"
+  version="2026.01.01.0426"
   launch="Settings/AutoUnlock"
   pluginURL="https://raw.githubusercontent.com/dkaser/unraid-auto-unlock/main/plugin/auto-unlock.plg"
   support="https://forums.unraid.net/topic/195584-plugin-automatic-disk-unlock/"
@@ -15,6 +15,16 @@
 
 <CHANGES>
 <![CDATA[
+
+### 2026.01.01.0426
+
+### 🚀 Features
+
+- Add native http handler ([#46](https://github.com/dkaser/unraid-auto-unlock/pull/46))
+
+### 🐛 Bug Fixes
+
+- Don't show instructions with command output ([#45](https://github.com/dkaser/unraid-auto-unlock/pull/45))
 
 ### 2025.12.16.0447
 
@@ -35,20 +45,14 @@
 
 - Check if array started before retrying ([#39](https://github.com/dkaser/unraid-auto-unlock/pull/39))
 
-### 2025.12.13.1832
-
-### 🐛 Bug Fixes
-
-- Retry start once if emhttpd fails ([#37](https://github.com/dkaser/unraid-auto-unlock/pull/37))
-
 
 For older releases, see https://github.com/dkaser/unraid-auto-unlock/releases
 ]]>
 </CHANGES>
 
-<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2025.12.16.0447-noarch-1.txz">
-<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2025.12.16.0447/unraid-auto-unlock-2025.12.16.0447-noarch-1.txz</URL>
-<SHA256>c351ca8d598dea5ef191df5a77f651f5b12a6001b6e82ca2e178b0aac1bc3e7d</SHA256>
+<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.01.01.0426-noarch-1.txz">
+<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2026.01.01.0426/unraid-auto-unlock-2026.01.01.0426-noarch-1.txz</URL>
+<SHA256>ec664b97d7c0c5f59c4d009de85a8c1b0347437aa98970db39105ebe23d51553</SHA256>
 </FILE>
 
 <!--
@@ -57,10 +61,10 @@ The 'install' script.
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2025.12.16.0447-noarch-1.txz
+upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.01.01.0426-noarch-1.txz
 
 # cleanup old versions
-rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2025.12.16.0447')
+rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2026.01.01.0426')
 
 # remove other branch (if switching between main and preview)
 
@@ -71,7 +75,7 @@ rm -f /var/log/plugins/auto-unlock-preview.plg
 echo ""
 echo "----------------------------------------------------"
 echo " auto-unlock has been installed."
-echo " Version: 2025.12.16.0447"
+echo " Version: 2026.01.01.0426"
 echo "----------------------------------------------------"
 echo ""
 ]]>
