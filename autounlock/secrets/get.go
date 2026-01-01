@@ -5,32 +5,43 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"net"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/bytemare/secret-sharing/keys"
+	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/dns"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/http"
+	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/rclone"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
-	_ "github.com/rclone/rclone/backend/all" // Import all rclone backends
-	"github.com/rclone/rclone/fs"
 	"github.com/rs/zerolog/log"
 )
+
+// Fetcher is an interface for fetching secret data from various sources.
+type Fetcher interface {
+	Fetch(ctx context.Context, path string) (string, error)
+}
 
 type RetrievedShare struct {
 	Share   *keys.KeyShare
 	ShareID string
 }
 
+// FetchShare fetches a share from the specified path.
+// Supports multiple protocols:
+//   - dns:domain.com - Fetch from DNS TXT records
+//   - http://... or https://... - Fetch via HTTP(S)
+//   - Everything else - Fetch via rclone (local files, S3, SFTP, etc.)
 func FetchShare(ctx context.Context, path string) (string, error) {
 	// Check for DNS protocol
 	if after, ok := strings.CutPrefix(path, "dns:"); ok {
-		domain := after
+		result, err := dns.Fetch(ctx, after)
+		if err != nil {
+			return "", fmt.Errorf("failed to fetch DNS resource: %w", err)
+		}
 
-		return fetchDNSTXT(domain)
+		return result, nil
 	}
 
 	// Check for HTTP/HTTPS protocol
@@ -43,76 +54,13 @@ func FetchShare(ctx context.Context, path string) (string, error) {
 		return result, nil
 	}
 
-	// Use rclone for everything else
-	return fetchWithRclone(ctx, path)
-}
-
-func fetchDNSTXT(domain string) (string, error) {
-	txts, err := net.LookupTXT(domain)
+	// Use rclone for everything else (local files and remote backends)
+	result, err := rclone.Fetch(ctx, path)
 	if err != nil {
-		return "", fmt.Errorf("failed to lookup TXT records for domain %s: %w", domain, err)
+		return "", fmt.Errorf("failed to fetch resource via rclone: %w", err)
 	}
 
-	// Return concatenated TXT records
-	return strings.Join(txts, ""), nil
-}
-
-func fetchWithRclone(ctx context.Context, path string) (string, error) {
-	var fsPath, objPath string
-
-	// Handle local file paths
-	switch {
-	case !strings.HasPrefix(path, ":"):
-		// Local file: split into directory and file
-		dir, file := splitLocalPath(path)
-		fsPath = dir
-		objPath = file
-	case strings.HasPrefix(path, ":http"):
-		fsPath = path
-		objPath = ""
-	default:
-		// Remote backend: split at last '/'
-		idx := strings.LastIndex(path, "/")
-		if idx == -1 {
-			return "", fmt.Errorf("invalid backend path: %s", path)
-		}
-
-		fsPath = path[:idx]
-		objPath = path[idx+1:]
-	}
-
-	fsys, err := fs.NewFs(ctx, fsPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to create filesystem: %w", err)
-	}
-
-	obj, err := fsys.NewObject(ctx, objPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to open object: %w", err)
-	}
-
-	reader, err := obj.Open(ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to open: %w", err)
-	}
-	defer reader.Close()
-
-	data, err := io.ReadAll(reader)
-	if err != nil {
-		return "", fmt.Errorf("failed to read: %w", err)
-	}
-
-	return strings.TrimSpace(string(data)), nil
-}
-
-// splitLocalPath splits a local file path into directory and file name.
-func splitLocalPath(path string) (string, string) {
-	idx := strings.LastIndex(path, "/")
-	if idx == -1 {
-		return ".", path // file in current directory
-	}
-
-	return path[:idx], path[idx+1:]
+	return result, nil
 }
 
 // ReadPathsFromFile reads share paths from a configuration file.
