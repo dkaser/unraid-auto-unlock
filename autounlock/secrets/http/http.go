@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+const (
+	maxResponseSize = 512
+)
+
 // Client is an interface for making HTTP requests.
 // This allows for easier testing and mocking if needed in the future.
 type Client interface {
@@ -102,10 +106,16 @@ func fetchWithClient(ctx context.Context, urlStr string, client Client) (string,
 		return "", fmt.Errorf("HTTP request failed with status: %d", resp.StatusCode)
 	}
 
-	// Read response
-	data, err := io.ReadAll(resp.Body)
+	// Read response with size limit to protect against misconfigured endpoints
+	limitedReader := io.LimitReader(resp.Body, maxResponseSize+1)
+
+	data, err := io.ReadAll(limitedReader)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if len(data) > maxResponseSize {
+		return "", fmt.Errorf("response body too large: exceeds %d byte limit", maxResponseSize)
 	}
 
 	return strings.TrimSpace(string(data)), nil

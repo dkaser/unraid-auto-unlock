@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -279,5 +280,161 @@ func TestFetch_URLEncodedCredentials(t *testing.T) {
 
 	if got != "encoded-auth" {
 		t.Errorf("Fetch() = %q, want %q", got, "encoded-auth")
+	}
+}
+
+// TestFetch_ResponseTooLarge tests that responses exceeding the size limit are rejected.
+func TestFetch_ResponseTooLarge(t *testing.T) {
+	largeBody := strings.Repeat("A", maxResponseSize+1)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(largeBody))
+	}))
+	defer server.Close()
+
+	ctx := context.Background()
+
+	_, err := Fetch(ctx, server.URL)
+	if err == nil {
+		t.Error("Expected error for response body too large, got none")
+	}
+
+	if !strings.Contains(err.Error(), "response body too large") {
+		t.Errorf("Expected error about response body too large, got: %v", err)
+	}
+}
+
+// TestFetch_ResponseAtLimit tests that responses at the size limit are accepted.
+func TestFetch_ResponseAtLimit(t *testing.T) {
+	bodyAtLimit := strings.Repeat("A", maxResponseSize)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(bodyAtLimit))
+	}))
+	defer server.Close()
+
+	ctx := context.Background()
+
+	got, err := Fetch(ctx, server.URL)
+	if err != nil {
+		t.Fatalf("Fetch failed for response at limit: %v", err)
+	}
+
+	if got != bodyAtLimit {
+		t.Errorf("Fetch() returned %d bytes, want %d bytes", len(got), len(bodyAtLimit))
+	}
+}
+
+// TestParseURL_HTTP tests parseURL with http URLs.
+func TestParseURL_HTTP(t *testing.T) {
+	parsedURL, insecure, err := parseURL("http://example.com/path")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if parsedURL.Scheme != "http" {
+		t.Errorf("Scheme = %q, want %q", parsedURL.Scheme, "http")
+	}
+
+	if insecure {
+		t.Errorf("Insecure = %v, want false", insecure)
+	}
+}
+
+// TestParseURL_HTTPS tests parseURL with https URLs.
+func TestParseURL_HTTPS(t *testing.T) {
+	parsedURL, insecure, err := parseURL("https://example.com/path")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if parsedURL.Scheme != "https" {
+		t.Errorf("Scheme = %q, want %q", parsedURL.Scheme, "https")
+	}
+
+	if insecure {
+		t.Errorf("Insecure = %v, want false", insecure)
+	}
+}
+
+// TestParseURL_HTTPSInsecure tests parseURL with https+insecure URLs.
+func TestParseURL_HTTPSInsecure(t *testing.T) {
+	parsedURL, insecure, err := parseURL("https+insecure://example.com/path")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if parsedURL.Scheme != "https" {
+		t.Errorf("Scheme = %q, want %q", parsedURL.Scheme, "https")
+	}
+
+	if !insecure {
+		t.Errorf("Insecure = %v, want true", insecure)
+	}
+}
+
+// TestParseURL_UnsupportedScheme tests parseURL with unsupported URL schemes.
+func TestParseURL_UnsupportedScheme(t *testing.T) {
+	_, _, err := parseURL("ftp://example.com/file")
+	if err == nil {
+		t.Error("Expected error for unsupported scheme, got none")
+	}
+
+	if !strings.Contains(err.Error(), "unsupported URL scheme") {
+		t.Errorf("Expected error about unsupported scheme, got: %v", err)
+	}
+}
+
+// TestParseURL_Invalid tests parseURL with invalid URLs.
+func TestParseURL_Invalid(t *testing.T) {
+	_, _, err := parseURL("ht!tp://invalid")
+	if err == nil {
+		t.Error("Expected error for invalid URL, got none")
+	}
+
+	if !strings.Contains(err.Error(), "invalid URL") {
+		t.Errorf("Expected error about invalid URL, got: %v", err)
+	}
+}
+
+// TestParseURL_WithAuth tests parseURL with URLs containing authentication.
+func TestParseURL_WithAuth(t *testing.T) {
+	parsedURL, insecure, err := parseURL("https://user:pass@example.com/path")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if parsedURL.Scheme != "https" {
+		t.Errorf("Scheme = %q, want %q", parsedURL.Scheme, "https")
+	}
+
+	if insecure {
+		t.Errorf("Insecure = %v, want false", insecure)
+	}
+
+	if parsedURL.User == nil {
+		t.Error("Expected user info in URL, got none")
+	}
+}
+
+// TestParseURL_InsecureWithAuth tests parseURL with insecure URLs containing authentication.
+func TestParseURL_InsecureWithAuth(t *testing.T) {
+	parsedURL, insecure, err := parseURL("https+insecure://user:pass@example.com/path")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if parsedURL.Scheme != "https" {
+		t.Errorf("Scheme = %q, want %q", parsedURL.Scheme, "https")
+	}
+
+	if !insecure {
+		t.Errorf("Insecure = %v, want true", insecure)
+	}
+
+	if parsedURL.User == nil {
+		t.Error("Expected user info in URL, got none")
 	}
 }
