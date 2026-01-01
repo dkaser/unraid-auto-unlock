@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/bytemare/secret-sharing/keys"
+	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/http"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
 	_ "github.com/rclone/rclone/backend/all" // Import all rclone backends
 	"github.com/rclone/rclone/fs"
@@ -30,6 +31,16 @@ func FetchShare(ctx context.Context, path string) (string, error) {
 		domain := after
 
 		return fetchDNSTXT(domain)
+	}
+
+	// Check for HTTP/HTTPS protocol
+	if strings.HasPrefix(path, "http") {
+		result, err := http.Fetch(ctx, path)
+		if err != nil {
+			return "", fmt.Errorf("failed to fetch HTTP resource: %w", err)
+		}
+
+		return result, nil
 	}
 
 	// Use rclone for everything else
