@@ -79,16 +79,17 @@ func fetchWithClient(ctx context.Context, urlStr string, client Client) (string,
 		client = createClient(insecure)
 	}
 
-	// Build the actual URL string for the request
-	actualURL := parsedURL.String()
+	// Create a sanitized copy of the URL without credentials to prevent leaking them in logs
+	sanitizedURL := *parsedURL
+	sanitizedURL.User = nil
 
-	// Create request
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, actualURL, nil)
+	// Create request with sanitized URL
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, sanitizedURL.String(), nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Handle Basic Auth from URL
+	// Handle Basic Auth from URL - set credentials via header after request creation
 	if parsedURL.User != nil {
 		username := parsedURL.User.Username()
 		password, _ := parsedURL.User.Password()
