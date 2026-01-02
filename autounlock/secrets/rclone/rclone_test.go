@@ -21,8 +21,9 @@ func TestFetch_LocalFile(t *testing.T) {
 	}
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	got, err := Fetch(ctx, testFile)
+	got, err := fetcher.Fetch(ctx, testFile)
 	if err != nil {
 		t.Fatalf("Fetch failed: %v", err)
 	}
@@ -44,8 +45,9 @@ func TestFetch_LocalFileWithWhitespace(t *testing.T) {
 	}
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	got, err := Fetch(ctx, testFile)
+	got, err := fetcher.Fetch(ctx, testFile)
 	if err != nil {
 		t.Fatalf("Fetch failed: %v", err)
 	}
@@ -72,8 +74,9 @@ func TestFetch_RelativePath(t *testing.T) {
 	t.Chdir(tmpDir)
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	got, err := Fetch(ctx, "relative.txt")
+	got, err := fetcher.Fetch(ctx, "relative.txt")
 	if err != nil {
 		t.Fatalf("Fetch failed: %v", err)
 	}
@@ -86,8 +89,9 @@ func TestFetch_RelativePath(t *testing.T) {
 // TestFetch_NonExistentFile tests fetching a non-existent file.
 func TestFetch_NonExistentFile(t *testing.T) {
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	_, err := Fetch(ctx, "/nonexistent/path/to/file.txt")
+	_, err := fetcher.Fetch(ctx, "/nonexistent/path/to/file.txt")
 	if err == nil {
 		t.Error("Expected error for non-existent file, got none")
 	}
@@ -96,9 +100,10 @@ func TestFetch_NonExistentFile(t *testing.T) {
 // TestFetch_InvalidBackendPath tests fetching with an invalid backend path.
 func TestFetch_InvalidBackendPath(t *testing.T) {
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
 	// Backend path without a slash should fail
-	_, err := Fetch(ctx, ":s3:invalid")
+	_, err := fetcher.Fetch(ctx, ":s3:invalid")
 	if err == nil {
 		t.Error("Expected error for invalid backend path, got none")
 	}

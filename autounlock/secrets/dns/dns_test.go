@@ -14,10 +14,11 @@ func TestFetch_ValidDomain(t *testing.T) {
 	}
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
 	// Using a commonly available test domain - this is just to verify the mechanism works
 	// In production, users would use their own domains
-	_, err := Fetch(ctx, "google.com")
+	_, err := fetcher.Fetch(ctx, "dns:google.com")
 	if err != nil {
 		t.Logf("DNS lookup for google.com failed (this is OK if network is unavailable): %v", err)
 	}
@@ -31,9 +32,10 @@ func TestFetch_InvalidDomain(t *testing.T) {
 	}
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
 	// Use a domain that should not exist
-	_, err := Fetch(ctx, "this-domain-definitely-does-not-exist-12345.invalid")
+	_, err := fetcher.Fetch(ctx, "dns:this-domain-definitely-does-not-exist-12345.invalid")
 	if err == nil {
 		t.Error("Expected error for non-existent domain, got none")
 	}
@@ -46,8 +48,9 @@ func TestFetch_InvalidDomain(t *testing.T) {
 // TestFetch_EmptyDomain tests DNS TXT record lookup with an empty domain.
 func TestFetch_EmptyDomain(t *testing.T) {
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	_, err := Fetch(ctx, "")
+	_, err := fetcher.Fetch(ctx, "dns:")
 	if err == nil {
 		t.Error("Expected error for empty domain, got none")
 	}
@@ -63,7 +66,9 @@ func TestFetch_ContextCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := Fetch(ctx, "google.com")
+	fetcher := &Fetcher{}
+
+	_, err := fetcher.Fetch(ctx, "dns:google.com")
 	if err == nil {
 		t.Error("Expected error due to context cancellation, got none")
 	}

@@ -11,56 +11,38 @@ import (
 	"time"
 
 	"github.com/bytemare/secret-sharing/keys"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/dns"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/http"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/rclone"
-	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
 	"github.com/rs/zerolog/log"
-)
 
-// Fetcher is an interface for fetching secret data from various sources.
-type Fetcher interface {
-	Fetch(ctx context.Context, path string) (string, error)
-}
+	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/dns"    // Register DNS fetcher
+	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/http"   // Register HTTP fetcher
+	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/rclone" // Register Rclone fetcher
+	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/registry"
+	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
+)
 
 type RetrievedShare struct {
 	Share   *keys.KeyShare
 	ShareID string
 }
 
-// FetchShare fetches a share from the specified path.
-// Supports multiple protocols:
-//   - dns:domain.com - Fetch from DNS TXT records
-//   - http://... or https://... - Fetch via HTTP(S)
-//   - Everything else - Fetch via rclone (local files, S3, SFTP, etc.)
+// FetchShare fetches a share from the specified path using the registry.
+// Tries each registered fetcher in priority order until one matches.
 func FetchShare(ctx context.Context, path string) (string, error) {
-	// Check for DNS protocol
-	if after, ok := strings.CutPrefix(path, "dns:"); ok {
-		result, err := dns.Fetch(ctx, after)
-		if err != nil {
-			return "", fmt.Errorf("failed to fetch DNS resource: %w", err)
+	registeredFetchers := registry.GetFetchers()
+
+	// Try each registered fetcher in priority order.
+	for _, fetcher := range registeredFetchers {
+		if matched := fetcher.Match(path); matched {
+			result, err := fetcher.Fetch(ctx, path)
+			if err != nil {
+				return "", fmt.Errorf("failed to fetch resource: %w", err)
+			}
+
+			return result, nil
 		}
-
-		return result, nil
 	}
 
-	// Check for HTTP/HTTPS protocol
-	if strings.HasPrefix(path, "http") {
-		result, err := http.Fetch(ctx, path)
-		if err != nil {
-			return "", fmt.Errorf("failed to fetch HTTP resource: %w", err)
-		}
-
-		return result, nil
-	}
-
-	// Use rclone for everything else (local files and remote backends)
-	result, err := rclone.Fetch(ctx, path)
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch resource via rclone: %w", err)
-	}
-
-	return result, nil
+	return "", fmt.Errorf("no fetcher available for path: %s", path)
 }
 
 // ReadPathsFromFile reads share paths from a configuration file.

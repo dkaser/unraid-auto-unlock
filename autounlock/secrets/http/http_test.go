@@ -38,8 +38,9 @@ func TestFetch_Success(t *testing.T) {
 			defer server.Close()
 
 			ctx := context.Background()
+			fetcher := &Fetcher{}
 
-			got, err := Fetch(ctx, server.URL)
+			got, err := fetcher.Fetch(ctx, server.URL)
 			if err != nil {
 				t.Fatalf("Fetch failed: %v", err)
 			}
@@ -80,8 +81,9 @@ func TestFetch_BasicAuth(t *testing.T) {
 		String()
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	got, err := Fetch(ctx, urlWithAuth)
+	got, err := fetcher.Fetch(ctx, urlWithAuth)
 	if err != nil {
 		t.Fatalf("Fetch with basic auth failed: %v", err)
 	}
@@ -102,8 +104,9 @@ func TestFetch_InsecureTLS(t *testing.T) {
 
 	// Standard HTTPS request should fail with self-signed cert
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	_, err := Fetch(ctx, server.URL)
+	_, err := fetcher.Fetch(ctx, server.URL)
 	if err == nil {
 		t.Error("Expected error with self-signed certificate, got none")
 	}
@@ -111,7 +114,7 @@ func TestFetch_InsecureTLS(t *testing.T) {
 	// Request with https+insecure:// should succeed
 	insecureURL := "https+insecure://" + server.Listener.Addr().String()
 
-	got, err := Fetch(ctx, insecureURL)
+	got, err := fetcher.Fetch(ctx, insecureURL)
 	if err != nil {
 		t.Fatalf("Fetch with insecure flag failed: %v", err)
 	}
@@ -143,8 +146,9 @@ func TestFetch_HTTPStatusErrors(t *testing.T) {
 			defer server.Close()
 
 			ctx := context.Background()
+			fetcher := &Fetcher{}
 
-			_, err := Fetch(ctx, server.URL)
+			_, err := fetcher.Fetch(ctx, server.URL)
 			if err == nil {
 				t.Errorf("Expected error for status code %d, got none", tc.statusCode)
 			}
@@ -167,8 +171,9 @@ func TestFetch_InvalidURLs(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
+			fetcher := &Fetcher{}
 
-			_, err := Fetch(ctx, tc.url)
+			_, err := fetcher.Fetch(ctx, tc.url)
 			if err == nil {
 				t.Errorf("Expected error for URL %q, got none", tc.url)
 			}
@@ -193,8 +198,9 @@ func TestFetch_SubdirectoryPath(t *testing.T) {
 	defer server.Close()
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	got, err := Fetch(ctx, server.URL+"/share/subdir/file.txt")
+	got, err := fetcher.Fetch(ctx, server.URL+"/share/subdir/file.txt")
 	if err != nil {
 		t.Fatalf("Fetch with subdirectory path failed: %v", err)
 	}
@@ -228,8 +234,9 @@ func TestFetch_CombinedFeatures(t *testing.T) {
 		String()
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	got, err := Fetch(ctx, urlWithAuth)
+	got, err := fetcher.Fetch(ctx, urlWithAuth)
 	if err != nil {
 		t.Fatalf("Fetch with combined features failed: %v", err)
 	}
@@ -272,8 +279,9 @@ func TestFetch_URLEncodedCredentials(t *testing.T) {
 		String()
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	got, err := Fetch(ctx, urlWithAuth)
+	got, err := fetcher.Fetch(ctx, urlWithAuth)
 	if err != nil {
 		t.Fatalf("Fetch with encoded credentials failed: %v", err)
 	}
@@ -294,8 +302,9 @@ func TestFetch_ResponseTooLarge(t *testing.T) {
 	defer server.Close()
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	_, err := Fetch(ctx, server.URL)
+	_, err := fetcher.Fetch(ctx, server.URL)
 	if err == nil {
 		t.Error("Expected error for response body too large, got none")
 	}
@@ -316,8 +325,9 @@ func TestFetch_ResponseAtLimit(t *testing.T) {
 	defer server.Close()
 
 	ctx := context.Background()
+	fetcher := &Fetcher{}
 
-	got, err := Fetch(ctx, server.URL)
+	got, err := fetcher.Fetch(ctx, server.URL)
 	if err != nil {
 		t.Fatalf("Fetch failed for response at limit: %v", err)
 	}

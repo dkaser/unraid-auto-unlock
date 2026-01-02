@@ -8,14 +8,40 @@ import (
 
 	_ "github.com/rclone/rclone/backend/all" // Import all rclone backends
 	"github.com/rclone/rclone/fs"
+
+	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/registry"
 )
+
+const (
+	// PriorityRclone is the priority for rclone fetcher (lowest priority, catch-all default).
+	PriorityRclone = 100
+)
+
+func init() {
+	registry.Register(&Fetcher{})
+}
+
+// Fetcher implements the secret fetching interface for rclone-based file retrieval.
+// Supports local files and remote backends (S3, SFTP, etc.).
+type Fetcher struct{}
+
+// Match always returns true for rclone, as it's the catch-all default.
+// All paths that don't match other fetchers will be handled by rclone.
+func (f *Fetcher) Match(_ string) bool {
+	return true
+}
+
+// Priority returns 100 for rclone (lowest priority, catch-all default).
+func (f *Fetcher) Priority() int {
+	return PriorityRclone
+}
 
 // Fetch retrieves secret data using rclone from various backends.
 // Supports local files and remote backends (S3, SFTP, etc.).
 // Path format:
 //   - Local files: /path/to/file or relative/path/to/file
 //   - Remote backends: :backend:bucket/path/to/file
-func Fetch(ctx context.Context, path string) (string, error) {
+func (f *Fetcher) Fetch(ctx context.Context, path string) (string, error) {
 	var fsPath, objPath string
 
 	// Handle local file paths vs remote backends
