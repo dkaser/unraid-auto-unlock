@@ -8,6 +8,7 @@ linters:
     - exhaustruct
     - forbidigo
     - gochecknoglobals
+    - gochecknoinits # Required for fetcher registry
     - noctx
     - lll
     - testpackage
@@ -32,7 +33,6 @@ linters:
 
 formatters:
   enable:
-    - gci
     - gofmt
     - gofumpt
     - goimports

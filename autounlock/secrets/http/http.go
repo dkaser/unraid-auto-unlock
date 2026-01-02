@@ -8,19 +8,47 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/registry"
 )
 
 const (
 	maxResponseSize = 512
+	PriorityHTTP    = 20
 )
 
-// Client is an interface for making HTTP requests.
-// This allows for easier testing and mocking if needed in the future.
+func init() {
+	registry.Register(&Fetcher{})
+}
+
 type Client interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// createClient creates an HTTP client with optional insecure TLS configuration.
+type Fetcher struct {
+	// Client can be optionally set for testing. If nil, a default client is created.
+	Client Client
+}
+
+func (f *Fetcher) Match(path string) bool {
+	return strings.HasPrefix(path, "http")
+}
+
+func (f *Fetcher) Priority() int {
+	return PriorityHTTP
+}
+
+// Fetch retrieves content from an HTTP(S) URL with optional insecure TLS and basic auth support.
+// Supported URL formats:
+//   - http://example.com/path
+//   - https://example.com/path
+//   - https+insecure://example.com/path (skips TLS verification)
+//   - https://user:pass@example.com/path (basic auth)
+//   - https+insecure://user:pass@example.com/path (both options)
+func (f *Fetcher) Fetch(ctx context.Context, urlStr string) (string, error) {
+	return f.fetchWithClient(ctx, urlStr)
+}
+
 func createClient(insecure bool) *http.Client {
 	if insecure {
 		return &http.Client{
@@ -33,17 +61,6 @@ func createClient(insecure bool) *http.Client {
 	}
 
 	return http.DefaultClient
-}
-
-// Fetch retrieves content from an HTTP(S) URL with optional insecure TLS and basic auth support.
-// Supported URL formats:
-//   - http://example.com/path
-//   - https://example.com/path
-//   - https+insecure://example.com/path (skips TLS verification)
-//   - https://user:pass@example.com/path (basic auth)
-//   - https+insecure://user:pass@example.com/path (both options)
-func Fetch(ctx context.Context, urlStr string) (string, error) {
-	return fetchWithClient(ctx, urlStr, nil)
 }
 
 // parseURL parses and validates the URL, handling the https+insecure:// prefix.
@@ -68,13 +85,14 @@ func parseURL(urlStr string) (*url.URL, bool, error) {
 
 // fetchWithClient is the internal implementation that allows injecting a custom HTTP client.
 // This is useful for testing but not exposed in the public API.
-func fetchWithClient(ctx context.Context, urlStr string, client Client) (string, error) {
+func (f *Fetcher) fetchWithClient(ctx context.Context, urlStr string) (string, error) {
 	parsedURL, insecure, err := parseURL(urlStr)
 	if err != nil {
 		return "", err
 	}
 
-	// Create HTTP client if not provided
+	// Use the configured client or create a new one
+	client := f.Client
 	if client == nil {
 		client = createClient(insecure)
 	}
