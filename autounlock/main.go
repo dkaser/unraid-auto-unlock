@@ -1,22 +1,21 @@
 package main
 
 import (
-	"os"
+	"fmt"
 
-	"github.com/alexflint/go-arg"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 )
 
 func main() {
-	var args CmdArgs
-
 	fs := afero.NewOsFs()
 
-	parser := arg.MustParse(&args)
-	if parser.Subcommand() == nil {
-		parser.WriteHelp(os.Stdout)
-		os.Exit(1)
+	args := parseArgs()
+
+	if args.License != nil {
+		printLicense()
+
+		return
 	}
 
 	autoUnlock, err := NewAutoUnlock(fs, args)
@@ -47,4 +46,23 @@ func main() {
 		lockFile.Close()
 		log.Fatal().Stack().Err(err).Msg("Failed to execute command") //nolint:gocritic
 	}
+}
+
+func printLicense() {
+	licenseText := `
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <https://www.gnu.org/licenses/>.
+	`
+
+	fmt.Println(licenseText)
 }
