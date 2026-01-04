@@ -1,6 +1,29 @@
 package main
 
-import "github.com/dkaser/unraid-auto-unlock/autounlock/version"
+/*
+	autounlock - Unraid Auto Unlock
+	Copyright (C) 2025-2026 Derek Kaser
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+import (
+	"os"
+
+	"github.com/alexflint/go-arg"
+	"github.com/dkaser/unraid-auto-unlock/autounlock/version"
+)
 
 type SetupCmd struct {
 	Threshold uint16 `arg:"--threshold" help:"Number of shares required to unlock drives" default:"3"`
@@ -24,12 +47,15 @@ type ResetCmd struct {
 	Force bool `arg:"--force" help:"Force reset without confirmation"`
 }
 
+type LicenseCmd struct{}
+
 type CmdArgs struct {
 	Setup    *SetupCmd    `arg:"subcommand:setup"    help:"Setup auto-unlock configuration"`
 	Unlock   *UnlockCmd   `arg:"subcommand:unlock"   help:"Unlock drives using auto-unlock configuration"`
 	TestPath *TestPathCmd `arg:"subcommand:testpath" help:"Test access to a given path"`
 	Obscure  *ObscureCmd  `arg:"subcommand:obscure"  help:"Obscure a secret read from stdin"`
 	Reset    *ResetCmd    `arg:"subcommand:reset"    help:"Reset auto-unlock configuration"`
+	License  *LicenseCmd  `arg:"subcommand:license"  help:"Display license information"`
 
 	Config        string `arg:"--config"        help:"Path to config file"       default:"/boot/config/plugins/auto-unlock/config.txt"`
 	State         string `arg:"--state"         help:"Path to state file"        default:"/boot/config/plugins/auto-unlock/state.json"`
@@ -42,4 +68,16 @@ type CmdArgs struct {
 
 func (CmdArgs) Version() string {
 	return version.BuildInfoString()
+}
+
+func parseArgs() CmdArgs {
+	var args CmdArgs
+
+	parser := arg.MustParse(&args)
+	if parser.Subcommand() == nil {
+		parser.WriteHelp(os.Stdout)
+		os.Exit(1)
+	}
+
+	return args
 }
