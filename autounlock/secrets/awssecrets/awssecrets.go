@@ -103,6 +103,10 @@ func (f *SSMFetcher) Fetch(ctx context.Context, path string) (string, error) {
 		return "", fmt.Errorf("failed to get parameter: %w", err)
 	}
 
+	if result.Parameter == nil || result.Parameter.Value == nil {
+		return "", errors.New("parameter value is nil")
+	}
+
 	return strings.TrimSpace(*result.Parameter.Value), nil
 }
 
