@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Create an SSM Parameter Store value with user-supplied name/value,
+  and an IAM user with read-only access to just that parameter.
+
+Parameters:
+  ObjectName:
+    Type: String
+    Description: SSM parameter name (must start with "/" and use only allowed characters; no spaces)
+    AllowedPattern: "^(/[a-zA-Z0-9_.-]+)+$"
+    ConstraintDescription: must start with "/" and use only letters, numbers, periods, dashes, underscores, or slashes; no spaces
+
+  ObjectValue:
+    Type: String
+    Description: SSM parameter value (sensitive)
+    NoEcho: true
+
+  GenerateAccessKey:
+    Type: String
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: This template will create an output with the connection string to use in the Unraid Auto Unlock plugin. This connection string contains the IAM user's access key and secret key. This is probably acceptable to most users since the IAM user only has read access to the single piece, if you are uncomfortable with this you can set the "GenerateAccessKey" parameter to false, which will skip creating the access key. In that case, you will need to manually create an access key for the IAM user after stack creation, and replace the placeholders "ACCESS_KEY_ID" and "ACCESS_KEY_SECRET" in the connection string output with the actual values.
+
+Conditions:
+  GenerateAccessKeyCondition: !Equals [!Ref GenerateAccessKey, "true"]
+
+Resources:
+  SSMParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Ref ObjectName
+      Type: String
+      Value: !Ref ObjectValue
+      Tier: Standard
+
+  SSMReadOnlyUser:
+    Type: AWS::IAM::User
+    Properties:
+      Tags:
+        - Key: SSMParameter
+          Value: !Ref ObjectName
+      Policies:
+        - PolicyName: SSMParameterReadOnlyAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:GetParameterHistory
+                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ObjectName}"
+
+  SSMReadOnlyUserAccessKey:
+    Condition: GenerateAccessKeyCondition
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref SSMReadOnlyUser
+
+Outputs:
+  SSMConnectionString:
+    Description: >
+      aws-ssm connection string in the form:
+      aws-ssm://accesskey:secretkey@region/parameter-path
+    Value: !If
+      - GenerateAccessKeyCondition
+      - !Sub |
+        aws-ssm://${SSMReadOnlyUserAccessKey}:${SSMReadOnlyUserAccessKey.SecretAccessKey}@${AWS::Region}/${ObjectName}
+      - !Sub |
+        aws-ssm://ACCESS_KEY_ID:ACCESS_KEY_SECRET@${AWS::Region}/${ObjectName}
