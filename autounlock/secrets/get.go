@@ -13,9 +13,10 @@ import (
 	"github.com/bytemare/secret-sharing/keys"
 	"github.com/rs/zerolog/log"
 
-	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/dns"    // Register DNS fetcher
-	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/http"   // Register HTTP fetcher
-	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/rclone" // Register Rclone fetcher
+	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/awssecrets" // Register AWS fetchers
+	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/dns"        // Register DNS fetcher
+	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/http"       // Register HTTP fetcher
+	_ "github.com/dkaser/unraid-auto-unlock/autounlock/secrets/rclone"     // Register Rclone fetcher
 	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets/registry"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/state"
 )
