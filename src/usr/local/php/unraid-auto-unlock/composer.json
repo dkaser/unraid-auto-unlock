@@ -25,6 +25,7 @@
         "edacerton/plugin-utils": "^1.0",
         "slim/psr7": "^1.8",
         "slim/slim": "^4.15",
-        "symfony/process": "^7.4"
+        "symfony/process": "^7.4",
+        "php": ">=8.3"
     }
 }
