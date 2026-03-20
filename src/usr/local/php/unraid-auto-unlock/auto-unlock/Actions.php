@@ -32,7 +32,7 @@ class Actions
      * Uses getIncrementalOutput and disables output buffering for true streaming.
      * MUST call sendStreamHeaders() before calling this function.
      */
-    private static function streamProcess(Process $process, string $startMsg = null, string $timeoutMsg = null): int
+    private static function streamProcess(Process $process, ?string $startMsg = null, ?string $timeoutMsg = null): int
     {
         if ($startMsg) {
             echo $startMsg;
