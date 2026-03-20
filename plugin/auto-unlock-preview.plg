@@ -4,7 +4,7 @@
 <PLUGIN 
   name="auto-unlock"
   author="Derek Kaser"
-  version="2026.01.04.1548"
+  version="2026.03.20.0220"
   launch="Settings/AutoUnlock"
   pluginURL="https://raw.githubusercontent.com/dkaser/unraid-auto-unlock/main/plugin/auto-unlock-preview.plg"
   support="https://forums.unraid.net/topic/195584-plugin-automatic-disk-unlock/"
@@ -15,6 +15,13 @@
 
 <CHANGES>
 <![CDATA[
+
+### 2026.03.20.0220
+
+### 🐛 Bug Fixes
+
+- Mark params as nullable ([#70](https://github.com/dkaser/unraid-auto-unlock/pull/70))
+
 
 ### 2026.01.04.1548
 
@@ -36,27 +43,14 @@
 
 - Don't show instructions with command output ([#45](https://github.com/dkaser/unraid-auto-unlock/pull/45))
 
-### 2025.12.16.0447
-
-### 🚀 Features
-
-- First main release!
-- Add docs link ([#42](https://github.com/dkaser/unraid-auto-unlock/pull/42))
-
-### 🐛 Bug Fixes
-
-- Naming in README and plugin launch ([#44](https://github.com/dkaser/unraid-auto-unlock/pull/44))
-- Clarify message logged for array startup ([#41](https://github.com/dkaser/unraid-auto-unlock/pull/41))
-- Log message if array starts during delay ([#40](https://github.com/dkaser/unraid-auto-unlock/pull/40))
-
 
 For older releases, see https://github.com/dkaser/unraid-auto-unlock/releases
 ]]>
 </CHANGES>
 
-<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.01.04.1548-noarch-1.txz">
-<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2026.01.04.1548/unraid-auto-unlock-2026.01.04.1548-noarch-1.txz</URL>
-<SHA256>5eefc153a331b2bee51a9b04cf0fcb559df6dabe0ca8d686f694ad5390ba31d3</SHA256>
+<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.03.20.0220-noarch-1.txz">
+<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2026.03.20.0220/unraid-auto-unlock-2026.03.20.0220-noarch-1.txz</URL>
+<SHA256>83440758b413972f96c33e0db0f4716a88d8e91934bbe949aad03eea67b6bda7</SHA256>
 </FILE>
 
 <!--
@@ -65,10 +59,10 @@ The 'install' script.
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.01.04.1548-noarch-1.txz
+upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.03.20.0220-noarch-1.txz
 
 # cleanup old versions
-rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2026.01.04.1548')
+rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2026.03.20.0220')
 
 # remove other branch (if switching between main and preview)
 rm -f /boot/config/plugins/auto-unlock.plg
@@ -80,7 +74,7 @@ sed -i "s/Automatic Disk Unlock/Automatic Disk Unlock (Preview)/" /usr/local/emh
 echo ""
 echo "----------------------------------------------------"
 echo " auto-unlock has been installed."
-echo " Version: 2026.01.04.1548"
+echo " Version: 2026.03.20.0220"
 echo "----------------------------------------------------"
 echo ""
 ]]>
