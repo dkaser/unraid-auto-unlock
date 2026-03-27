@@ -26,6 +26,7 @@ linters:
           - varnamelen
           - errcheck
           - goconst
+          - gosec
   settings:
     varnamelen:
       ignore-decls:

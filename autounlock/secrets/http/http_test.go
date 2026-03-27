@@ -292,7 +292,7 @@ func TestFetch_URLEncodedCredentials(t *testing.T) {
 
 	// URL encode the credentials
 	encodedUser := "user%40example.com"
-	encodedPass := "p%40ss%3Aword%21" //nolint:gosec // Test credential, not real
+	encodedPass := "p%40ss%3Aword%21"
 	urlWithAuth := "http://" + encodedUser + ":" + encodedPass + "@" + server.Listener.Addr().
 		String()
 
