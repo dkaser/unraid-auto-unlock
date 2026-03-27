@@ -48,12 +48,76 @@ func NewService(fs afero.Fs) *Service {
 	return &Service{fs: fs}
 }
 
-// BlockDevices represents block device information.
+// BlockDevice represents a single block device from lsblk output.
+type BlockDevice struct {
+	Name     string        `json:"name"`
+	Fstype   string        `json:"fstype"`
+	Type     string        `json:"type"`
+	Children []BlockDevice `json:"children"`
+}
+
+// BlockDevices represents the top-level lsblk JSON output.
 type BlockDevices struct {
-	BlockDevices []struct {
-		Name   string `json:"name"`
-		Fstype string `json:"fstype"`
-	} `json:"blockdevices"`
+	BlockDevices []BlockDevice `json:"blockdevices"`
+}
+
+// ParseLUKSDevices parses lsblk JSON output and returns the names of block devices
+// that should be tested as LUKS targets. A device is included if:
+//   - its fstype is "crypto_LUKS", or
+//   - any of its direct children has type "crypt" (indicating the array has already
+//     opened it via device mapper).
+//
+// Results are deduplicated.
+func ParseLUKSDevices(data []byte) ([]string, error) {
+	var lsblk BlockDevices
+
+	err := json.Unmarshal(data, &lsblk)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse lsblk output: %w", err)
+	}
+
+	seen := make(map[string]struct{})
+
+	var results []string
+
+	var walk func(dev BlockDevice)
+
+	walk = func(dev BlockDevice) {
+		include := dev.Fstype == "crypto_LUKS"
+
+		for _, child := range dev.Children {
+			if child.Type == "crypt" {
+				include = true
+			}
+		}
+
+		if include {
+			if _, already := seen[dev.Name]; !already {
+				seen[dev.Name] = struct{}{}
+				results = append(results, dev.Name)
+			}
+		}
+
+		for _, child := range dev.Children {
+			walk(child)
+		}
+	}
+
+	for _, dev := range lsblk.BlockDevices {
+		walk(dev)
+	}
+
+	return results, nil
+}
+
+// GetLUKSDevices returns the list of block devices that should be tested as LUKS targets.
+func (s *Service) GetLUKSDevices() ([]string, error) {
+	out, err := exec.Command("/bin/lsblk", "-Jpo", "NAME,FSTYPE,TYPE").Output()
+	if err != nil {
+		return nil, fmt.Errorf("failed to run lsblk: %w", err)
+	}
+
+	return ParseLUKSDevices(out)
 }
 
 // IsUnraid checks if the system is running Unraid.
@@ -74,26 +138,15 @@ func (s *Service) TestKeyfile(keyfile string) error {
 
 	log.Debug().Str("keyfile", keyfile).Msg("Keyfile exists")
 
-	out, err := exec.Command("/bin/lsblk", "-Jpo", "NAME,FSTYPE", "-Q", "FSTYPE=='crypto_LUKS'").
-		Output()
+	deviceNames, err := s.GetLUKSDevices()
 	if err != nil {
-		return fmt.Errorf("failed to run lsblk: %w", err)
+		return err
 	}
 
-	var devices BlockDevices
+	log.Info().Strs("devices", deviceNames).Msg("LUKS devices to test")
 
-	err = json.Unmarshal(out, &devices)
-	if err != nil {
-		return fmt.Errorf("failed to parse lsblk output: %w", err)
-	}
-
-	for _, device := range devices.BlockDevices {
-		log.Debug().
-			Str("device", device.Name).
-			Str("fstype", device.Fstype).
-			Msg("Found block device")
-
-		log.Info().Str("device", device.Name).Msg("LUKS encrypted device found")
+	for _, deviceName := range deviceNames {
+		log.Info().Str("device", deviceName).Msg("LUKS encrypted device found")
 
 		cmd := exec.Command( // #nosec G204
 			"/sbin/cryptsetup",
@@ -101,7 +154,7 @@ func (s *Service) TestKeyfile(keyfile string) error {
 			"--test-passphrase",
 			"--key-file",
 			keyfile,
-			device.Name,
+			deviceName,
 		)
 
 		err := cmd.Run()
@@ -109,13 +162,13 @@ func (s *Service) TestKeyfile(keyfile string) error {
 			log.Error().
 				Stack().
 				Err(err).
-				Str("device", device.Name).
+				Str("device", deviceName).
 				Msg("Failed to unlock LUKS device")
 
 			continue
 		}
 
-		log.Info().Str("device", device.Name).Msg("LUKS device unlocked successfully")
+		log.Info().Str("device", deviceName).Msg("LUKS device unlocked successfully")
 
 		return nil
 	}

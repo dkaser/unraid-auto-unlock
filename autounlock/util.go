@@ -59,10 +59,10 @@ func (a *AutoUnlock) InitializeLogging() {
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	if term.IsTerminal(int(os.Stdout.Fd())) || a.args.Pretty {
+	if term.IsTerminal(int(os.Stdout.Fd())) || a.args.Pretty { // #nosec G115
 		log.Logger = log.Output(zerolog.ConsoleWriter{
 			Out:     os.Stderr,
-			NoColor: !term.IsTerminal(int(os.Stderr.Fd())),
+			NoColor: !term.IsTerminal(int(os.Stderr.Fd())), // #nosec G115
 		})
 	}
 

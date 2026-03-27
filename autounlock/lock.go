@@ -32,7 +32,7 @@ func lockApp() (*os.File, error) {
 		return nil, fmt.Errorf("failed to open lock file: %w", err)
 	}
 
-	err = syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+	err = syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB) // #nosec G115
 	if err != nil {
 		file.Close()
 

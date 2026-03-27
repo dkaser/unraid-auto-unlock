@@ -437,7 +437,7 @@ func TestGetFsState_LargeFile(t *testing.T) {
 	var contentSb413 strings.Builder
 	for i := range 100 {
 		// Use valid key names (alphanumeric)
-		contentSb413.WriteString(fmt.Sprintf("field%d=value%d\n", i, i))
+		fmt.Fprintf(&contentSb413, "field%d=value%d\n", i, i)
 	}
 
 	content += contentSb413.String()
@@ -446,7 +446,7 @@ func TestGetFsState_LargeFile(t *testing.T) {
 
 	var contentSb418 strings.Builder
 	for i := 100; i < 200; i++ {
-		contentSb418.WriteString(fmt.Sprintf("field%d=value%d\n", i, i))
+		fmt.Fprintf(&contentSb418, "field%d=value%d\n", i, i)
 	}
 
 	content += contentSb418.String()
@@ -460,5 +460,144 @@ func TestGetFsState_LargeFile(t *testing.T) {
 
 	if fsState != "Started" {
 		t.Errorf("Expected 'Started', got '%s'", fsState)
+	}
+}
+
+// Full sample lsblk output from a real Unraid system with the array started.
+// Used by multiple ParseLUKSDevices tests.
+const lsblkFullSample = `{
+   "blockdevices": [
+      {"name": "/dev/loop0", "fstype": "squashfs", "type": "loop"},
+      {"name": "/dev/loop1", "fstype": "squashfs", "type": "loop"},
+      {"name": "/dev/loop2", "fstype": "btrfs",    "type": "loop"},
+      {"name": "/dev/sda",  "fstype": null, "type": "disk",
+         "children": [{"name": "/dev/sda1", "fstype": "vfat", "type": "part"}]},
+      {"name": "/dev/sdb",  "fstype": null, "type": "disk"},
+      {"name": "/dev/sdc",  "fstype": null, "type": "disk"},
+      {"name": "/dev/sdd",  "fstype": null, "type": "disk"},
+      {"name": "/dev/sde",  "fstype": null, "type": "disk"},
+      {"name": "/dev/sdf",  "fstype": null, "type": "disk",
+         "children": [{"name": "/dev/sdf1", "fstype": "crypto_LUKS", "type": "part",
+            "children": [{"name": "/dev/mapper/sdf1", "fstype": "zfs_member", "type": "crypt"}]}]},
+      {"name": "/dev/sdg",  "fstype": "zfs_member", "type": "disk",
+         "children": [{"name": "/dev/sdg1", "fstype": "zfs_member", "type": "part"}]},
+      {"name": "/dev/sdh",  "fstype": null, "type": "disk",
+         "children": [{"name": "/dev/sdh1", "fstype": "crypto_LUKS", "type": "part"}]},
+      {"name": "/dev/sdi",  "fstype": null, "type": "disk",
+         "children": [{"name": "/dev/sdi1", "fstype": "crypto_LUKS", "type": "part"}]},
+      {"name": "/dev/sdj",  "fstype": null, "type": "disk",
+         "children": [{"name": "/dev/sdj1", "fstype": "crypto_LUKS", "type": "part"}]},
+      {"name": "/dev/sdk",  "fstype": null, "type": "disk",
+         "children": [{"name": "/dev/sdk1", "fstype": "crypto_LUKS", "type": "part"}]},
+      {"name": "/dev/md1p1", "fstype": null, "type": "md",
+         "children": [{"name": "/dev/mapper/md1p1", "fstype": "xfs", "type": "crypt"}]},
+      {"name": "/dev/md2p1", "fstype": null, "type": "md",
+         "children": [{"name": "/dev/mapper/md2p1", "fstype": "xfs", "type": "crypt"}]},
+      {"name": "/dev/md3p1", "fstype": null, "type": "md",
+         "children": [{"name": "/dev/mapper/md3p1", "fstype": "xfs", "type": "crypt"}]},
+      {"name": "/dev/zram0", "fstype": null, "type": "disk"},
+      {"name": "/dev/nvme1n1", "fstype": null, "type": "disk",
+         "children": [{"name": "/dev/nvme1n1p1", "fstype": "crypto_LUKS", "type": "part",
+            "children": [{"name": "/dev/mapper/nvme1n1p1", "fstype": "zfs_member", "type": "crypt"}]}]},
+      {"name": "/dev/nvme2n1", "fstype": null, "type": "disk",
+         "children": [{"name": "/dev/nvme2n1p1", "fstype": "crypto_LUKS", "type": "part",
+            "children": [{"name": "/dev/mapper/nvme2n1p1", "fstype": "zfs_member", "type": "crypt"}]}]},
+      {"name": "/dev/nvme0n1", "fstype": null, "type": "disk",
+         "children": [{"name": "/dev/nvme0n1p1", "fstype": "crypto_LUKS", "type": "part",
+            "children": [{"name": "/dev/mapper/nvme0n1p1", "fstype": "zfs_member", "type": "crypt"}]}]}
+   ]
+}`
+
+func TestParseLUKSDevices_FullSample(t *testing.T) {
+	want := []string{
+		"/dev/sdf1",
+		"/dev/sdh1",
+		"/dev/sdi1",
+		"/dev/sdj1",
+		"/dev/sdk1",
+		"/dev/md1p1",
+		"/dev/md2p1",
+		"/dev/md3p1",
+		"/dev/nvme1n1p1",
+		"/dev/nvme2n1p1",
+		"/dev/nvme0n1p1",
+	}
+
+	got, err := ParseLUKSDevices([]byte(lsblkFullSample))
+	if err != nil {
+		t.Fatalf("ParseLUKSDevices returned unexpected error: %v", err)
+	}
+
+	if len(got) != len(want) {
+		t.Fatalf("expected %d devices, got %d: %v", len(want), len(got), got)
+	}
+
+	wantSet := make(map[string]struct{}, len(want))
+	for _, d := range want {
+		wantSet[d] = struct{}{}
+	}
+
+	for _, d := range got {
+		if _, ok := wantSet[d]; !ok {
+			t.Errorf("unexpected device in result: %s", d)
+		}
+	}
+}
+
+func TestParseLUKSDevices_NoLUKS(t *testing.T) {
+	input := `{"blockdevices": [
+		{"name": "/dev/sda", "fstype": null, "type": "disk",
+			"children": [{"name": "/dev/sda1", "fstype": "vfat", "type": "part"}]},
+		{"name": "/dev/sdb", "fstype": "xfs",  "type": "disk"}
+	]}`
+
+	got, err := ParseLUKSDevices([]byte(input))
+	if err != nil {
+		t.Fatalf("ParseLUKSDevices returned unexpected error: %v", err)
+	}
+
+	if len(got) != 0 {
+		t.Errorf("expected no devices, got: %v", got)
+	}
+}
+
+func TestParseLUKSDevices_CryptChildOnly(t *testing.T) {
+	// Device has no crypto_LUKS fstype but has a crypt-type child (array already started).
+	input := `{"blockdevices": [
+		{"name": "/dev/md1p1", "fstype": null, "type": "md",
+			"children": [{"name": "/dev/mapper/md1p1", "fstype": "xfs", "type": "crypt"}]}
+	]}`
+
+	got, err := ParseLUKSDevices([]byte(input))
+	if err != nil {
+		t.Fatalf("ParseLUKSDevices returned unexpected error: %v", err)
+	}
+
+	if len(got) != 1 || got[0] != "/dev/md1p1" {
+		t.Errorf("expected [/dev/md1p1], got: %v", got)
+	}
+}
+
+func TestParseLUKSDevices_Deduplication(t *testing.T) {
+	// Device matches both criteria: fstype=crypto_LUKS AND has a crypt child.
+	input := `{"blockdevices": [
+		{"name": "/dev/sdf1", "fstype": "crypto_LUKS", "type": "part",
+			"children": [{"name": "/dev/mapper/sdf1", "fstype": "zfs_member", "type": "crypt"}]}
+	]}`
+
+	got, err := ParseLUKSDevices([]byte(input))
+	if err != nil {
+		t.Fatalf("ParseLUKSDevices returned unexpected error: %v", err)
+	}
+
+	if len(got) != 1 {
+		t.Errorf("expected exactly 1 device (deduplication), got %d: %v", len(got), got)
+	}
+}
+
+func TestParseLUKSDevices_MalformedJSON(t *testing.T) {
+	_, err := ParseLUKSDevices([]byte(`{not valid json`))
+	if err == nil {
+		t.Error("ParseLUKSDevices should return an error for malformed JSON")
 	}
 }
