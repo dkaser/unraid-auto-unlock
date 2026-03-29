@@ -20,7 +20,9 @@
 
 ### 🐛 Bug Fixes
 
-- Keyfile test fails when all encrypted disks are in the array ([#72](https://github.com/dkaser/unraid-auto-unlock/pull/72))
+- Keyfile test fails when all encrypted disks are in the array ([#72](https://github.com/dkaser/unraid-auto-unlock/pull/72)) 
+
+ 
 
 ### 2026.03.20.0220
 
