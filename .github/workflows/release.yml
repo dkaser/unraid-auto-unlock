@@ -3,6 +3,8 @@ name: Release
 on:
   release:
     types:
+      - prereleased
+      - released
       - published
 
 jobs:
