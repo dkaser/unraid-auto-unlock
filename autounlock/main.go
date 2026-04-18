@@ -48,9 +48,11 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {
-		<-sigChan
+		sig := <-sigChan
+		log.Warn().Str("signal", sig.String()).Msg("Received signal, cleaning up")
 		autoUnlock.RemoveKeyfile()
-		os.Exit(1)
+		signal.Reset(sig)
+		syscall.Kill(syscall.Getpid(), sig.(syscall.Signal)) //nolint:errcheck,forcetypeassert
 	}()
 
 	lockFile, err := lockApp()
