@@ -4,7 +4,7 @@
 <PLUGIN 
   name="auto-unlock"
   author="Derek Kaser"
-  version="2026.03.29.0308"
+  version="2026.04.18.0247"
   launch="Settings/AutoUnlock"
   pluginURL="https://raw.githubusercontent.com/dkaser/unraid-auto-unlock/main/plugin/auto-unlock-preview.plg"
   support="https://forums.unraid.net/topic/195584-plugin-automatic-disk-unlock/"
@@ -15,6 +15,16 @@
 
 <CHANGES>
 <![CDATA[
+
+### 2026.04.18.0247
+
+### 🐛 Bug Fixes
+
+- Make sure keyfile is cleaned up if process is killed ([#73](https://github.com/dkaser/unraid-auto-unlock/pull/73))
+
+### 🧰 Maintenance
+
+- Update dependency symfony/process to v7.4.5 [security] ([#67](https://github.com/dkaser/unraid-auto-unlock/pull/67))
 
 ### 2026.03.29.0308
 
@@ -29,21 +39,14 @@
 - Keyfile test fails when all encrypted disks are in the array ([#72](https://github.com/dkaser/unraid-auto-unlock/pull/72)) 
  
 
-### 2026.03.20.0220
-
-### 🐛 Bug Fixes
-
-- Mark params as nullable ([#70](https://github.com/dkaser/unraid-auto-unlock/pull/70))
- 
-
 
 For older releases, see https://github.com/dkaser/unraid-auto-unlock/releases
 ]]>
 </CHANGES>
 
-<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.03.29.0308-noarch-1.txz">
-<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2026.03.29.0308/unraid-auto-unlock-2026.03.29.0308-noarch-1.txz</URL>
-<SHA256>150eb3176205ff636e5e40f1d67ed912dd1c2867a9df2a1506846849eff07239</SHA256>
+<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.04.18.0247-noarch-1.txz">
+<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2026.04.18.0247/unraid-auto-unlock-2026.04.18.0247-noarch-1.txz</URL>
+<SHA256>256b230bdc7403240c818d16126329c1e2c51a2ebbce7da1c893b0ff109803fe</SHA256>
 </FILE>
 
 <!--
@@ -52,10 +55,10 @@ The 'install' script.
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.03.29.0308-noarch-1.txz
+upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.04.18.0247-noarch-1.txz
 
 # cleanup old versions
-rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2026.03.29.0308')
+rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2026.04.18.0247')
 
 # remove other branch (if switching between main and preview)
 rm -f /boot/config/plugins/auto-unlock.plg
@@ -67,7 +70,7 @@ sed -i "s/Automatic Disk Unlock/Automatic Disk Unlock (Preview)/" /usr/local/emh
 echo ""
 echo "----------------------------------------------------"
 echo " auto-unlock has been installed."
-echo " Version: 2026.03.29.0308"
+echo " Version: 2026.04.18.0247"
 echo "----------------------------------------------------"
 echo ""
 ]]>
