@@ -47,6 +47,8 @@ func (a *AutoUnlock) Unlock() error {
 		return fmt.Errorf("failed to read state from file: %w", err)
 	}
 
+	defer a.RemoveKeyfile()
+
 	secret, err := a.retrieveSecret(state)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve secret: %w", err)
@@ -61,8 +63,6 @@ func (a *AutoUnlock) Unlock() error {
 	if err != nil {
 		return fmt.Errorf("failed to decrypt file: %w", err)
 	}
-
-	defer a.RemoveKeyfile()
 
 	log.Info().
 		Str("encryptedfile", a.args.EncryptedFile).

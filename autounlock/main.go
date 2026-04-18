@@ -20,6 +20,9 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -40,6 +43,15 @@ func main() {
 	if err != nil {
 		log.Fatal().Stack().Err(err).Msg("Failed to initialize AutoUnlock")
 	}
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
+
+	go func() {
+		<-sigChan
+		autoUnlock.RemoveKeyfile()
+		os.Exit(1)
+	}()
 
 	lockFile, err := lockApp()
 	if err != nil {
