@@ -55,6 +55,17 @@ func main() {
 		syscall.Kill(syscall.Getpid(), sig.(syscall.Signal)) //nolint:errcheck,forcetypeassert
 	}()
 
+	// fetch-share is an internal subcommand invoked as a subprocess by the parent's
+	// share collection loop. It must not acquire the lock since the parent holds it.
+	if args.FetchShare != nil {
+		err = autoUnlock.FetchShareFromStdin()
+		if err != nil {
+			log.Fatal().Stack().Err(err).Msg("Failed to fetch share")
+		}
+
+		return
+	}
+
 	lockFile, err := lockApp()
 	if err != nil {
 		log.Fatal().Stack().Err(err).Msg("Another instance of the application is already running")

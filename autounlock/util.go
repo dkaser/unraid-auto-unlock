@@ -53,6 +53,27 @@ func (a *AutoUnlock) ObscureSecretFromStdin() error {
 	return nil
 }
 
+// FetchShareFromStdin reads a path from stdin, fetches the share at that path,
+// and writes the result to stdout. Used internally as a subprocess by the parent
+// process so that the OS can hard-kill a stalled backend when the timeout fires.
+func (a *AutoUnlock) FetchShareFromStdin() error {
+	scanner := bufio.NewScanner(os.Stdin)
+	if !scanner.Scan() {
+		return fmt.Errorf("failed to read path from stdin: %w", scanner.Err())
+	}
+
+	path := scanner.Text()
+
+	result, err := secrets.FetchShare(context.Background(), path)
+	if err != nil {
+		return fmt.Errorf("failed to fetch share: %w", err)
+	}
+
+	fmt.Print(result)
+
+	return nil
+}
+
 // InitializeLogging sets up the logging configuration.
 func (a *AutoUnlock) InitializeLogging() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix

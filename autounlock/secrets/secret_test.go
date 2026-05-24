@@ -55,7 +55,7 @@ func TestCreateSecret_GeneratesCorrectNumberOfShares(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			fs := afero.NewMemMapFs()
-			svc := NewService(fs)
+			svc := NewService(fs, "", false, false)
 
 			secret, err := svc.CreateSecret(tc.threshold, tc.shares)
 			if err != nil {
@@ -83,7 +83,7 @@ func TestCreateSecret_GeneratesCorrectNumberOfShares(t *testing.T) {
 
 func TestCombineSecret_ReconstructsOriginalSecret(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 	threshold := uint16(3)
 	shares := uint16(5)
 
@@ -126,7 +126,7 @@ func TestCreateSecret_GeneratesUniqueSecrets(t *testing.T) {
 	verificationKeys := make([][]byte, iterations)
 	for i := range iterations {
 		fs := afero.NewMemMapFs()
-		svc := NewService(fs)
+		svc := NewService(fs, "", false, false)
 
 		sharedSecret, err := svc.CreateSecret(threshold, shares)
 		if err != nil {
@@ -157,7 +157,7 @@ func TestCreateSecret_GeneratesUniqueSecrets(t *testing.T) {
 
 func TestGetShare_InvalidBase64(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 
 	sharedSecret, err := svc.CreateSecret(2, 3)
 	if err != nil {
@@ -175,7 +175,7 @@ func TestGetShare_InvalidBase64(t *testing.T) {
 
 func TestGetShare_InvalidSignature(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 
 	sharedSecret, err := svc.CreateSecret(2, 3)
 	if err != nil {
@@ -204,7 +204,7 @@ func TestGetShare_InvalidSignature(t *testing.T) {
 
 func TestGetShare_WrongSigningKey(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 	// Create two separate secrets with different signing keys
 	secret1, err := svc.CreateSecret(2, 3)
 	if err != nil {
@@ -227,7 +227,7 @@ func TestGetShare_WrongSigningKey(t *testing.T) {
 
 func TestReadPathsFromFile_ValidFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 
 	content := `path1
 path2
@@ -253,7 +253,7 @@ path3`
 
 func TestReadPathsFromFile_WithCommentsAndEmptyLines(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 
 	content := `# This is a comment
 path1
@@ -285,7 +285,7 @@ path3
 
 func TestReadPathsFromFile_WithWhitespace(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 
 	content := `  path1  
 	path2	
@@ -307,7 +307,7 @@ path3   `
 
 func TestReadPathsFromFile_FileNotFound(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 
 	_, err := svc.ReadPathsFromFile("/nonexistent.txt")
 	if err == nil {
@@ -317,7 +317,7 @@ func TestReadPathsFromFile_FileNotFound(t *testing.T) {
 
 func TestReadPathsFromFile_EmptyFile(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 
 	afero.WriteFile(fs, "/empty.txt", []byte(""), 0o644)
 
@@ -333,7 +333,7 @@ func TestReadPathsFromFile_EmptyFile(t *testing.T) {
 
 func TestCombineSecret_InsufficientShares(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 	threshold := uint16(3)
 	shares := uint16(5)
 
@@ -369,7 +369,7 @@ func TestCombineSecret_InsufficientShares(t *testing.T) {
 
 func TestCombineSecret_WithDuplicateShares(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 	threshold := uint16(3)
 	shares := uint16(5)
 
@@ -489,7 +489,7 @@ func TestGenerateRandomKey_DifferentLengths(t *testing.T) {
 
 func TestCombineSecret_WithAllShares(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 	threshold := uint16(3)
 	totalShares := uint16(5)
 
@@ -523,7 +523,7 @@ func TestCombineSecret_WithAllShares(t *testing.T) {
 
 func TestCombineSecret_WithExactThreshold(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	svc := NewService(fs)
+	svc := NewService(fs, "", false, false)
 	threshold := uint16(2)
 	totalShares := uint16(5)
 

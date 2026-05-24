@@ -49,13 +49,16 @@ type ResetCmd struct {
 
 type LicenseCmd struct{}
 
+type FetchShareCmd struct{}
+
 type CmdArgs struct {
-	Setup    *SetupCmd    `arg:"subcommand:setup"    help:"Setup auto-unlock configuration"`
-	Unlock   *UnlockCmd   `arg:"subcommand:unlock"   help:"Unlock drives using auto-unlock configuration"`
-	TestPath *TestPathCmd `arg:"subcommand:testpath" help:"Test access to a given path"`
-	Obscure  *ObscureCmd  `arg:"subcommand:obscure"  help:"Obscure a secret read from stdin"`
-	Reset    *ResetCmd    `arg:"subcommand:reset"    help:"Reset auto-unlock configuration"`
-	License  *LicenseCmd  `arg:"subcommand:license"  help:"Display license information"`
+	Setup       *SetupCmd       `arg:"subcommand:setup"        help:"Setup auto-unlock configuration"`
+	Unlock      *UnlockCmd      `arg:"subcommand:unlock"       help:"Unlock drives using auto-unlock configuration"`
+	TestPath    *TestPathCmd    `arg:"subcommand:testpath"     help:"Test access to a given path"`
+	Obscure     *ObscureCmd     `arg:"subcommand:obscure"      help:"Obscure a secret read from stdin"`
+	Reset       *ResetCmd       `arg:"subcommand:reset"        help:"Reset auto-unlock configuration"`
+	License     *LicenseCmd     `arg:"subcommand:license"      help:"Display license information"`
+	FetchShare  *FetchShareCmd  `arg:"subcommand:fetch-share"  help:"[Internal] Fetch a share from a path read on stdin"`
 
 	Config        string `arg:"--config"        help:"Path to config file"       default:"/boot/config/plugins/auto-unlock/config.txt"`
 	State         string `arg:"--state"         help:"Path to state file"        default:"/boot/config/plugins/auto-unlock/state.json"`
