@@ -94,7 +94,7 @@ func parseURL(urlStr string) (*url.URL, bool, error) {
 		return nil, false, fmt.Errorf("invalid URL: %w", err)
 	}
 
-	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" { //nolint:goconst
 		return nil, false, fmt.Errorf("unsupported URL scheme: %s", parsedURL.Scheme)
 	}
 

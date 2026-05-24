@@ -80,6 +80,7 @@ func (s *Service) fetchShare(ctx context.Context, path string) (string, error) {
 		args = append(args, "--pretty")
 	}
 
+	//nolint:gosec // execPath is from os.Executable(), not user input
 	cmd := exec.CommandContext(ctx, s.execPath, args...)
 	cmd.Stdin = strings.NewReader(path + "\n")
 	cmd.Stderr = os.Stderr

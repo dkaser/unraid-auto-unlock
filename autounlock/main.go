@@ -66,6 +66,10 @@ func main() {
 		return
 	}
 
+	runLockedCommand(autoUnlock, args)
+}
+
+func runLockedCommand(autoUnlock *AutoUnlock, args CmdArgs) {
 	lockFile, err := lockApp()
 	if err != nil {
 		log.Fatal().Stack().Err(err).Msg("Another instance of the application is already running")

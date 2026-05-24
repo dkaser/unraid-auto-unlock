@@ -60,7 +60,12 @@ func NewAutoUnlock(fs afero.Fs, args CmdArgs) (*AutoUnlock, error) {
 		return nil, fmt.Errorf("failed to get executable path: %w", err)
 	}
 
-	autoUnlock.secrets = secrets.NewService(fs, execPath, autoUnlock.args.Debug, autoUnlock.args.Pretty)
+	autoUnlock.secrets = secrets.NewService(
+		fs,
+		execPath,
+		autoUnlock.args.Debug,
+		autoUnlock.args.Pretty,
+	)
 
 	version.OutputToDebug()
 

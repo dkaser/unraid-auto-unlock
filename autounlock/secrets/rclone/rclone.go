@@ -24,7 +24,7 @@ import (
 	"io"
 	"strings"
 
-	// Register rclone backends individually so that we can exclude backends that are known to not work
+	// Register rclone backends individually so that we can exclude backends that are known to not work.
 	_ "github.com/rclone/rclone/backend/azureblob"
 	_ "github.com/rclone/rclone/backend/azurefiles"
 	_ "github.com/rclone/rclone/backend/b2"
