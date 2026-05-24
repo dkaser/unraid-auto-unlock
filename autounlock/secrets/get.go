@@ -23,6 +23,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -62,6 +64,33 @@ func FetchShare(ctx context.Context, path string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no fetcher available for path: %s", path)
+}
+
+// fetchShare spawns the binary itself as a subprocess to perform the actual fetch,
+// isolating potentially-hanging backends from the parent process. exec.CommandContext
+// sends SIGKILL to the subprocess when ctx expires, ensuring the parent is never
+// blocked longer than the configured server timeout regardless of backend behaviour.
+func (s *Service) fetchShare(ctx context.Context, path string) (string, error) {
+	args := []string{"fetch-share"}
+	if s.debug {
+		args = append(args, "--debug")
+	}
+
+	if s.pretty {
+		args = append(args, "--pretty")
+	}
+
+	//nolint:gosec // execPath is from os.Executable(), not user input
+	cmd := exec.CommandContext(ctx, s.execPath, args...)
+	cmd.Stdin = strings.NewReader(path + "\n")
+	cmd.Stderr = os.Stderr
+
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("fetch-share subprocess failed: %w", err)
+	}
+
+	return strings.TrimSpace(string(out)), nil
 }
 
 // ReadPathsFromFile reads share paths from a configuration file.
@@ -104,7 +133,7 @@ func (s *Service) tryGetShare(
 	ctx, cancel := context.WithTimeout(context.Background(), serverTimeout)
 	defer cancel()
 
-	shareStr, err := FetchShare(ctx, path)
+	shareStr, err := s.fetchShare(ctx, path)
 	if err != nil {
 		log.Debug().Int("path", pathNum).Stack().Err(err).Msg("Failed to fetch share")
 

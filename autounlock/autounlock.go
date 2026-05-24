@@ -20,6 +20,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/dkaser/unraid-auto-unlock/autounlock/encryption"
 	"github.com/dkaser/unraid-auto-unlock/autounlock/secrets"
@@ -48,14 +49,27 @@ func NewAutoUnlock(fs afero.Fs, args CmdArgs) (*AutoUnlock, error) {
 		unraid:     unraid.NewService(fs),
 		encryption: encryption.NewService(fs),
 		state:      state.NewService(fs),
-		secrets:    secrets.NewService(fs),
 	}
 
+	// Initialize logging before constructing secrets service so that the debug
+	// flag set by the debug file is reflected when forwarding flags to subprocesses.
 	autoUnlock.InitializeLogging()
+
+	execPath, err := os.Executable()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get executable path: %w", err)
+	}
+
+	autoUnlock.secrets = secrets.NewService(
+		fs,
+		execPath,
+		autoUnlock.args.Debug,
+		autoUnlock.args.Pretty,
+	)
 
 	version.OutputToDebug()
 
-	err := autoUnlock.Prechecks()
+	err = autoUnlock.Prechecks()
 	if err != nil {
 		return nil, fmt.Errorf("prechecks failed: %w", err)
 	}

@@ -44,6 +44,18 @@ func main() {
 		log.Fatal().Stack().Err(err).Msg("Failed to initialize AutoUnlock")
 	}
 
+	// fetch-share is an internal subcommand invoked as a subprocess by the parent's
+	// share collection loop. It must not acquire the lock since the parent holds it,
+	// and does not need signal cleanup handlers.
+	if args.FetchShare != nil {
+		err = autoUnlock.FetchShareFromStdin()
+		if err != nil {
+			log.Fatal().Stack().Err(err).Msg("Failed to fetch share")
+		}
+
+		return
+	}
+
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
@@ -55,6 +67,10 @@ func main() {
 		syscall.Kill(syscall.Getpid(), sig.(syscall.Signal)) //nolint:errcheck,forcetypeassert
 	}()
 
+	runLockedCommand(autoUnlock, args)
+}
+
+func runLockedCommand(autoUnlock *AutoUnlock, args CmdArgs) {
 	lockFile, err := lockApp()
 	if err != nil {
 		log.Fatal().Stack().Err(err).Msg("Another instance of the application is already running")

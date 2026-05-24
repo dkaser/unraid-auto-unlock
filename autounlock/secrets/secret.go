@@ -31,12 +31,20 @@ import (
 
 // Service provides secret sharing operations.
 type Service struct {
-	fs afero.Fs
+	fs       afero.Fs
+	execPath string
+	debug    bool
+	pretty   bool
 }
 
 // NewService creates a new secrets service.
-func NewService(fs afero.Fs) *Service {
-	return &Service{fs: fs}
+func NewService(fs afero.Fs, execPath string, debug bool, pretty bool) *Service {
+	return &Service{
+		fs:       fs,
+		execPath: execPath,
+		debug:    debug,
+		pretty:   pretty,
+	}
 }
 
 // SharedSecret represents a shared secret with all its components.
