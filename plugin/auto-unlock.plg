@@ -4,7 +4,7 @@
 <PLUGIN 
   name="auto-unlock"
   author="Derek Kaser"
-  version="2026.04.18.0247"
+  version="2026.05.24.1622"
   launch="Settings/AutoUnlock"
   pluginURL="https://raw.githubusercontent.com/dkaser/unraid-auto-unlock/main/plugin/auto-unlock.plg"
   support="https://forums.unraid.net/topic/195584-plugin-automatic-disk-unlock/"
@@ -15,6 +15,13 @@
 
 <CHANGES>
 <![CDATA[
+
+### 2026.05.24.1622
+
+### 🐛 Bug Fixes
+
+- Move share retrieval to subprocess so that timeout can be enforced ([#78](https://github.com/dkaser/unraid-auto-unlock/pull/78))
+ 
 
 ### 2026.04.18.0247
 
@@ -32,21 +39,14 @@
 
 - Keyfile test fails when all encrypted disks are in the array ([#72](https://github.com/dkaser/unraid-auto-unlock/pull/72)) 
 
-### 2026.03.27.0427
-
-### 🐛 Bug Fixes
-
-- Keyfile test fails when all encrypted disks are in the array ([#72](https://github.com/dkaser/unraid-auto-unlock/pull/72)) 
- 
-
 
 For older releases, see https://github.com/dkaser/unraid-auto-unlock/releases
 ]]>
 </CHANGES>
 
-<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.04.18.0247-noarch-1.txz">
-<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2026.04.18.0247/unraid-auto-unlock-2026.04.18.0247-noarch-1.txz</URL>
-<SHA256>256b230bdc7403240c818d16126329c1e2c51a2ebbce7da1c893b0ff109803fe</SHA256>
+<FILE Name="/boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.05.24.1622-noarch-1.txz">
+<URL>https://github.com/dkaser/unraid-auto-unlock/releases/download/2026.05.24.1622/unraid-auto-unlock-2026.05.24.1622-noarch-1.txz</URL>
+<SHA256>2783581a944ceacd1f5b55f7a2be0eb9f8ed6db812756112c0a3f076c294bf07</SHA256>
 </FILE>
 
 <!--
@@ -55,10 +55,10 @@ The 'install' script.
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.04.18.0247-noarch-1.txz
+upgradepkg --install-new /boot/config/plugins/auto-unlock/unraid-auto-unlock-2026.05.24.1622-noarch-1.txz
 
 # cleanup old versions
-rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2026.04.18.0247')
+rm -f $(ls /boot/config/plugins/auto-unlock/unraid-auto-unlock-*.txz 2>/dev/null | grep -v '2026.05.24.1622')
 
 # remove other branch (if switching between main and preview)
 
@@ -69,7 +69,7 @@ rm -f /var/log/plugins/auto-unlock-preview.plg
 echo ""
 echo "----------------------------------------------------"
 echo " auto-unlock has been installed."
-echo " Version: 2026.04.18.0247"
+echo " Version: 2026.05.24.1622"
 echo "----------------------------------------------------"
 echo ""
 ]]>

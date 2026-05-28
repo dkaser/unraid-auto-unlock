@@ -21,6 +21,7 @@
 ### 🐛 Bug Fixes
 
 - Move share retrieval to subprocess so that timeout can be enforced ([#78](https://github.com/dkaser/unraid-auto-unlock/pull/78))
+ 
 
 ### 2026.04.18.0247
 
