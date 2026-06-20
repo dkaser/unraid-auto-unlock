@@ -12,7 +12,7 @@ require (
 	github.com/bytemare/ecc v0.10.0
 	github.com/bytemare/secret-sharing v0.8.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/rclone/rclone v1.74.2
+	github.com/rclone/rclone v1.74.3
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/afero v1.15.0
 	golang.org/x/term v0.43.0
